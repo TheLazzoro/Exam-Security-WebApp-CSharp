@@ -25,3 +25,22 @@ jobs:
         with:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/exam-security-webapp-csharp:latest  # Please change the username here
+
+
+  update_server:
+    name: Updating prod environment
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Replacing container
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOSTNAME }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script: |
+            docker image pull ${{ secrets.DOCKERHUB_USERNAME }}/exam-security-webapp-csharp
+            docker container stop mywebapp-prod
+            docker container prune -f
+            docker run -d --name mywebapp-prod --restart unless-stopped -p 80:80 -p 443:443 username/mywebapp
+            docker image prune -f
