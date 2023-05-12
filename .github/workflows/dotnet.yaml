@@ -1,75 +1,27 @@
-name: CI/CD Workflow
+name: CI/CD
 
-on:
-  push:
-    branches:
-      - main
+on: push
 
 jobs:
   build:
-    runs-on: ubuntu-22.04 #or ubuntu-latest
+    name: Building image
+    runs-on: ubuntu-latest
     steps:
-      - name: Check out code
+      - name: Checkout
         uses: actions/checkout@v2
 
-
-      - name: MySql
-        uses: mirromutth/mysql-action@v1.1
+      - name: Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+        
+      - name: DockerHub login
+        uses: docker/login-action@v1
         with:
-          # host port: 3800 # Optional, default value is 3306. The port of host
-          # container port: 3307 # Optional, default value is 3306. The port of container
-          # character set server: 'utf8' # Optional, default value is 'utf8mb4'. The '--character-set-server' option for mysqld
-          # collation server: 'utf8_general_ci' # Optional, default value is 'utf8mb4_general_ci'. The '--collation-server' option for mysqld
-          mysql version: '8.0' # Optional, default value is "latest". The version of the MySQL
-          mysql database: 'my_test_database' # Optional, default value is "test". The specified database which will be create
-          # mysql root password: ${{ secrets.RootPassword }} # Required if "mysql user" is empty, default is empty. The root superuser password
-          mysql user: 'dev' # Required if "mysql root password" is empty, default is empty. The superuser for the specified database. Can use secrets, too
-          # mysql password: ${{ secrets.DatabasePassword }} # Required if "mysql user" exists. The password for the "mysql user"
-          mysql password: 'ax2'
-
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v1
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          
+      - name: Build and push
+        uses: docker/build-push-action@v2
         with:
-          dotnet-version: 5.x
-      
-      - name: Restore dependencies
-        run: dotnet restore
-      
-      - name: Build
-        run: dotnet build --no-restore
-      
-      - name: DotNet Publish
-        run: dotnet publish -c Release
-      
-      - name: Stop MyTestService Service
-        uses: appleboy/ssh-action@v0.1.8
-        with:
-          script: service MyTestService stop
-          host: ${{ secrets.REMOTE_HOST }}
-          username: ${{ secrets.REMOTE_USER }}
-          passphrase: ${{ secrets.PASSPHRASE }}
-          password: ${{ secrets.PASSPHRASE }}
-          key: ${{ secrets.REMOTE_SSH_KEY }}
-      
-      - name: Copy to Server via SCP
-        uses: appleboy/scp-action@master
-        with:
-          source: /home/runner/work/Test-ASPNET-WebAPI/Test-ASPNET-WebAPI/TestASPNET/bin/Release/net5.0/publish/
-          target: /var/www/Test_ASPNET/
-          host: ${{ secrets.REMOTE_HOST }}
-          username: ${{ secrets.REMOTE_USER }}
-          passphrase: ${{ secrets.PASSPHRASE }}
-          key: ${{ secrets.REMOTE_SSH_KEY }}
-        env:
-          ASPNETCORE_ENVIRONMENT: Production
-
-      - name: Start MyTestService Service
-        uses: appleboy/ssh-action@v0.1.8
-        with:
-          script: service MyTestService start
-          host: ${{ secrets.REMOTE_HOST }}
-          username: ${{ secrets.REMOTE_USER }}
-          passphrase: ${{ secrets.PASSPHRASE }}
-          password: ${{ secrets.PASSPHRASE }}
-          key: ${{ secrets.REMOTE_SSH_KEY }}
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/mywebapp:latest  # Please change the username here
