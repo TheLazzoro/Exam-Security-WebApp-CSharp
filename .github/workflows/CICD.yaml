@@ -24,4 +24,4 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/Exam-Security-WebApp-CSharp:latest  # Please change the username here
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/exam-security-webapp-csharp:latest  # Please change the username here
