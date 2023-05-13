@@ -1,17 +1,30 @@
-﻿using Database;
-using Exam_Security_WebApp_CSharp.DTOS;
-using Model;
+using Microsoft.AspNetCore.Mvc;
 using MySqlConnector;
 using System.Data;
 using System.Data.SqlClient;
 
-namespace Facades
+namespace WebApp.Controllers
 {
-    public static class UserFacade
+    [ApiController]
+    [Route("[controller]")]
+    public class WeatherForecastController : ControllerBase
     {
-        public static void Create(User user)
+        private static readonly string[] Summaries = new[]
         {
-            using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
+        "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+    };
+
+        private readonly ILogger<WeatherForecastController> _logger;
+
+        public WeatherForecastController(ILogger<WeatherForecastController> logger)
+        {
+            _logger = logger;
+        }
+
+        [HttpGet(Name = "GetWeatherForecast")]
+        public IEnumerable<WeatherForecast> Get()
+        {
+            using (MySqlConnection connection = new MySqlConnection("server=localhost;port=3306;uid=dev;pwd=ax2;database=exam-security"))
             {
                 connection.Open();
                 MySqlCommand command = connection.CreateCommand();
@@ -29,10 +42,10 @@ namespace Facades
                 {
                     // Prepared statement query
                     command.CommandText = "Insert into db_user (username, passwd) VALUES (@username, @password)";
-                    SqlParameter username = new SqlParameter("@username", SqlDbType.VarChar, 255);
-                    SqlParameter password = new SqlParameter("@password", SqlDbType.VarChar, 255);
-                    username.Value = user.Username;
-                    password.Value = user.Password;
+                    MySqlParameter username = new MySqlParameter("@username", MySqlDbType.VarChar);
+                    MySqlParameter password = new MySqlParameter("@password", MySqlDbType.VarChar);
+                    username.Value = "user";
+                    password.Value = "pass";
                     command.Parameters.Add(username);
                     command.Parameters.Add(password);
                     command.Prepare();
@@ -40,7 +53,7 @@ namespace Facades
 
                     // Attempt to commit the transaction.
                     transaction.Commit();
-                    Console.WriteLine($"Created user '{user.Username}'.");
+                    Console.WriteLine($"Created user 'user'.");
                 }
                 catch (Exception ex)
                 {
@@ -62,6 +75,17 @@ namespace Facades
                     }
                 }
             }
+
+
+
+
+            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+            {
+                Date = DateTime.Now.AddDays(index),
+                TemperatureC = Random.Shared.Next(-20, 55),
+                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
+            })
+            .ToArray();
         }
     }
 }

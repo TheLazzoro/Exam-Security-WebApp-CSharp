@@ -11,7 +11,7 @@ public static class SharedSecret
     {
         if (secret == null)
         {
-            byte[] secret = new byte[32];
+            secret = new byte[32];
             var rand = RandomNumberGenerator.Create();
             rand.GetBytes(secret);
         }

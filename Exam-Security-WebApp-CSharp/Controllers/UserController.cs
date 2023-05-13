@@ -1,5 +1,6 @@
 ﻿using Exam_Security_WebApp_CSharp.DTOS;
 using Facades;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Model;
 using Newtonsoft.Json;
@@ -15,6 +16,7 @@ namespace Exam_Security_WebApp_CSharp.Controllers
     {
         // GET: api/<UserController>
         [HttpGet]
+        [Authorize]
         public IEnumerable<string> Get()
         {
             return new string[] { "value1", "value2" };
@@ -29,11 +31,13 @@ namespace Exam_Security_WebApp_CSharp.Controllers
 
         // POST api/<UserController>
         [HttpPost]
-        public void Post([FromBody] string value)
+        public IActionResult CreateUser([FromBody] UserDTO dto)
         {
-            UserDTO dto = JsonConvert.DeserializeObject<UserDTO>(value);
+            //UserDTO dto = JsonConvert.DeserializeObject<UserDTO>(value);
             User user = new User(dto.Username, dto.Password);
             UserFacade.Create(user);
+
+            return Ok();
         }
 
         // PUT api/<UserController>/5
