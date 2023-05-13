@@ -1,4 +1,6 @@
 ﻿
+using BCrypt.Net;
+
 namespace Model
 {
     public class User

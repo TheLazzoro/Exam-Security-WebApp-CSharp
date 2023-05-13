@@ -1,5 +1,5 @@
 ﻿using Database;
-using Exam_Security_WebApp_CSharp.DTOS;
+using WebApp.DTOS;
 using Model;
 using MySqlConnector;
 using System.Data;
@@ -29,8 +29,8 @@ namespace Facades
                 {
                     // Prepared statement query
                     command.CommandText = "Insert into db_user (username, passwd) VALUES (@username, @password)";
-                    SqlParameter username = new SqlParameter("@username", SqlDbType.VarChar, 255);
-                    SqlParameter password = new SqlParameter("@password", SqlDbType.VarChar, 255);
+                    MySqlParameter username = new MySqlParameter("@username", SqlDbType.VarChar);
+                    MySqlParameter password = new MySqlParameter("@password", SqlDbType.VarChar);
                     username.Value = user.Username;
                     password.Value = user.Password;
                     command.Parameters.Add(username);

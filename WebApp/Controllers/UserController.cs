@@ -1,14 +1,13 @@
-﻿using Exam_Security_WebApp_CSharp.DTOS;
+﻿using WebApp.DTOS;
 using Facades;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Model;
-using Newtonsoft.Json;
 using System.Net;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace Exam_Security_WebApp_CSharp.Controllers
+namespace WebApp.Controllers
 {
     [Route("[controller]")]
     [ApiController]

@@ -1,4 +1,4 @@
-﻿namespace Exam_Security_WebApp_CSharp.DTOS
+﻿namespace WebApp.DTOS
 {
     public class UserDTO
     {
