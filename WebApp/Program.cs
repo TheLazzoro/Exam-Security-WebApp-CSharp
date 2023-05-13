@@ -29,11 +29,13 @@ builder.Services.AddAuthentication(x =>
 {
     x.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidIssuer = config["JwtSettings:Issuer"],
-        IssuerSigningKey = new SymmetricSecurityKey(SharedSecret.GetSharedKey()),
-        ValidateIssuer = true,
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        //ValidIssuer = config["Jwt:Issuer"],
+        //ValidAudience = config["Jwt:Audience"],
         ValidateLifetime = true,
-        ValidateIssuerSigningKey = true
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(SharedSecret.GetSharedKey()),
     };
 });
 

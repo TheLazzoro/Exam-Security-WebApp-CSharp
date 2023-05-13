@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Model;
 using System.Net;
+using System.Security.Claims;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -15,17 +16,20 @@ namespace WebApp.Controllers
     {
         // GET: api/<UserController>
         [HttpGet]
-        [Authorize]
+        [Authorize(Roles = "user")]
         public IEnumerable<string> Get()
         {
+            var currentUser = GetCurrentUser();
+
             return new string[] { "value1", "value2" };
         }
 
         // GET api/<UserController>/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        public UserSafeDTO Get(long id)
         {
-            return "value";
+            var user = UserFacade.Get(id);
+            return new UserSafeDTO(user.Username);
         }
 
         // POST api/<UserController>
@@ -33,22 +37,27 @@ namespace WebApp.Controllers
         public IActionResult CreateUser([FromBody] UserDTO dto)
         {
             //UserDTO dto = JsonConvert.DeserializeObject<UserDTO>(value);
-            User user = new User(dto.Username, dto.Password);
+            User user = new User(dto.Username, dto.Password, "user");
             UserFacade.Create(user);
 
             return Ok();
         }
 
-        // PUT api/<UserController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        private User GetCurrentUser()
         {
-        }
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
 
-        // DELETE api/<UserController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
+            if(identity == null)
+            {
+                return null;
+            }
+
+            var userClaims = identity.Claims;
+            return new User
+            {
+                Username = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.NameIdentifier)?.Value,
+                Role = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.Role)?.Value,
+            };
         }
     }
 }

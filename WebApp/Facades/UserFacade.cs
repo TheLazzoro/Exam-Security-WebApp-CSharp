@@ -4,12 +4,13 @@ using Model;
 using MySqlConnector;
 using System.Data;
 using System.Data.SqlClient;
+using System.Xml;
 
 namespace Facades
 {
-    public static class UserFacade
+    internal static class UserFacade
     {
-        public static void Create(User user)
+        internal static void Create(User user)
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
@@ -28,13 +29,16 @@ namespace Facades
                 try
                 {
                     // Prepared statement query
-                    command.CommandText = "Insert into db_user (username, passwd) VALUES (@username, @password)";
+                    command.CommandText = "Insert into db_user (username, passwd, user_role) VALUES (@username, @password, @role)";
                     MySqlParameter username = new MySqlParameter("@username", SqlDbType.VarChar);
                     MySqlParameter password = new MySqlParameter("@password", SqlDbType.VarChar);
+                    MySqlParameter role = new MySqlParameter("@role", SqlDbType.VarChar);
                     username.Value = user.Username;
                     password.Value = user.Password;
+                    role.Value = user.Role;
                     command.Parameters.Add(username);
                     command.Parameters.Add(password);
+                    command.Parameters.Add(role);
                     command.Prepare();
                     command.ExecuteNonQuery();
 
@@ -61,6 +65,84 @@ namespace Facades
                         Console.WriteLine("  Message: {0}", ex2.Message);
                     }
                 }
+            }
+        }
+
+        internal static User? Get(string username)
+        {
+            using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
+            {
+                connection.Open();
+                MySqlCommand command = connection.CreateCommand();
+                command.Connection = connection;
+
+                command.CommandText = "select * from db_user where username = @username";
+                MySqlParameter username_param = new MySqlParameter("@username", SqlDbType.VarChar);
+                username_param.Value = username;
+                command.Parameters.Add(username_param);
+
+                long id = 0;
+                string? password = null;
+                string? role = null;
+                MySqlDataReader reader = command.ExecuteReader();
+                if (reader.Read())
+                {
+                    id = (long)reader["id"];
+                    password = reader["passwd"].ToString();
+                    role = reader["user_role"].ToString();
+                }
+
+                if (username == null)
+                    return null;
+
+                User user = new User()
+                {
+                    Id = id,
+                    Username = username,
+                    Password = password,
+                    Role = role,
+                };
+
+                return user;
+            }
+        }
+
+        internal static User? Get(long id)
+        {
+            using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
+            {
+                connection.Open();
+                MySqlCommand command = connection.CreateCommand();
+                command.Connection = connection;
+
+                command.CommandText = "select * from db_user where id = @id";
+                MySqlParameter id_param = new MySqlParameter("@id", SqlDbType.BigInt);
+                id_param.Value = id;
+                command.Parameters.Add(id_param);
+
+                string? username = null;
+                string? password = null;
+                string? role = null;
+                MySqlDataReader reader = command.ExecuteReader();
+                if (reader.Read())
+                {
+                    username = reader["username"].ToString();
+                    password = reader["passwd"].ToString();
+                    role = reader["user_role"].ToString();
+                }
+
+                if (username == null)
+                    return null;
+
+                User user = new User()
+                {
+                    Id = id,
+                    Username = username,
+                    Password = password,
+                    Role = role,
+                };
+
+                return user;
             }
         }
     }
