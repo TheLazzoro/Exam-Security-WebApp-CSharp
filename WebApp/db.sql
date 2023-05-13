@@ -3,7 +3,7 @@ use `exam-security`;
 
 create table db_user (
 	id int NOT NULL AUTO_INCREMENT,
-    username varchar(255) NOT NULL,
+    username varchar(255) NOT NULL UNIQUE,
     passwd varchar(255) NOT NULL,
 	PRIMARY KEY (id)
 );
