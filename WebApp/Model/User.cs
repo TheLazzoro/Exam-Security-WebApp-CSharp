@@ -1,7 +1,8 @@
 ﻿
 using BCrypt.Net;
+using WebApp.DTOS;
 
-namespace Model
+namespace WebApp.Model
 {
     public class User
     {
@@ -20,6 +21,11 @@ namespace Model
             this.Username = username;
             this.Password = BCrypt.Net.BCrypt.HashPassword(password);
             this.Role = role;
+        }
+
+        public User(UserSafeDTO userDTO)
+        {
+            this.Username = userDTO.Username;
         }
 
         public bool VerifyPassword(string password)

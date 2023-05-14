@@ -1,8 +1,9 @@
-using Database;
+using WebApp.Database;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using MySqlConnector;
 using WebApp.ErrorHandling;
+using WebApp;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
@@ -50,6 +51,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    Globals.IsDevelopment = true;
 }
 
 app.UseHttpsRedirection();

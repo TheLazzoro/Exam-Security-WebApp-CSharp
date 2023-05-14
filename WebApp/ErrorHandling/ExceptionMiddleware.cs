@@ -32,10 +32,19 @@ namespace WebApp.ErrorHandling
             {
                 context.Response.ContentType = "application/json";
                 context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                string message;
+                if(Globals.IsDevelopment)
+                {
+                    message = ex.Message;
+                }
+                else
+                {
+                    message = "Internal server error.";
+                }
                 var error = new Error
                 {
                     StatusCode = context.Response.StatusCode,
-                    Message = ex.Message
+                    Message = message
                 };
 
                 await context.Response.WriteAsync(error.ToString());

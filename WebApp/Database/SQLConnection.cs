@@ -2,7 +2,7 @@
 using System.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 
-namespace Database
+namespace WebApp.Database
 {
     public static class SQLConnection
     {

@@ -1,6 +1,4 @@
-﻿using Database;
-using WebApp.DTOS;
-using Model;
+﻿using WebApp.DTOS;
 using MySqlConnector;
 using System.Data;
 using System.Data.SqlClient;
@@ -9,8 +7,10 @@ using System.Net;
 using Microsoft.Extensions.FileProviders.Composite;
 using System.Web.Http;
 using WebApp.ErrorHandling;
+using WebApp.Model;
+using WebApp.Database;
 
-namespace Facades
+namespace WebApp.Facades
 {
     internal static class UserFacade
     {
@@ -37,15 +37,9 @@ namespace Facades
                 {
                     // Prepared statement query
                     command.CommandText = "Insert into db_user (username, passwd, user_role) VALUES (@username, @password, @role)";
-                    MySqlParameter username = new MySqlParameter("@username", SqlDbType.VarChar);
-                    MySqlParameter password = new MySqlParameter("@password", SqlDbType.VarChar);
-                    MySqlParameter role = new MySqlParameter("@role", SqlDbType.VarChar);
-                    username.Value = user.Username;
-                    password.Value = user.Password;
-                    role.Value = user.Role;
-                    command.Parameters.Add(username);
-                    command.Parameters.Add(password);
-                    command.Parameters.Add(role);
+                    command.Parameters.AddWithValue("@username", user.Username);
+                    command.Parameters.AddWithValue("@password", user.Password);
+                    command.Parameters.AddWithValue("@role", user.Role);
                     command.Prepare();
                     command.ExecuteNonQuery();
 
@@ -86,9 +80,7 @@ namespace Facades
                 command.Connection = connection;
 
                 command.CommandText = "select * from db_user where username = @username";
-                MySqlParameter username_param = new MySqlParameter("@username", SqlDbType.VarChar);
-                username_param.Value = username;
-                command.Parameters.Add(username_param);
+                command.Parameters.AddWithValue("@username", username);
 
                 long id = 0;
                 string? password = null;
@@ -125,9 +117,7 @@ namespace Facades
                 command.Connection = connection;
 
                 command.CommandText = "select * from db_user where id = @id";
-                MySqlParameter id_param = new MySqlParameter("@id", SqlDbType.BigInt);
-                id_param.Value = id;
-                command.Parameters.Add(id_param);
+                command.Parameters.AddWithValue("@id", id);
 
                 string? username = null;
                 string? password = null;

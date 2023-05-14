@@ -8,3 +8,11 @@ create table db_user (
     user_role varchar(64),
 	PRIMARY KEY (id)
 );
+
+create table db_forum_thread (
+	id bigint NOT NULL AUTO_INCREMENT,
+    title varchar(255) NOT NULL,
+    content varchar(255) NOT NULL,
+    user_Id bigint not null REFERENCES db_user(id),
+    PRIMARY KEY (id)
+);

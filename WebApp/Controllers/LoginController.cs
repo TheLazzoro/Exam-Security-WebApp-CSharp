@@ -4,12 +4,11 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using System.Text.Json;
 using WebApp.DTOS;
-using Model;
 using MySqlConnector;
-using Database;
-using Facades;
 using System.Net;
 using Microsoft.IdentityModel.Tokens;
+using WebApp.Model;
+using WebApp.Facades;
 
 namespace WebApp.Controllers
 {
@@ -49,6 +48,7 @@ namespace WebApp.Controllers
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Username),
                 new Claim(ClaimTypes.Role, user.Role),
+                new Claim(ClaimTypes.UserData, user.Id.ToString()),
             };
 
             var token = new JwtSecurityToken(

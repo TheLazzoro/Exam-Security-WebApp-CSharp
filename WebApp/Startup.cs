@@ -1,7 +1,7 @@
 ﻿using MySqlConnector;
 using System.Data.SqlClient;
 using System.Data;
-using Database;
+using WebApp.Database;
 
 public static class Startup
 {
