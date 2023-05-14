@@ -2,6 +2,7 @@
 using System.Data.SqlClient;
 using System.Data;
 using WebApp.Database;
+using System.Diagnostics;
 
 public static class Startup
 {
@@ -31,6 +32,7 @@ public static class Startup
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
+                Debug.WriteLine(ex.Message);
             }
         }
     }

@@ -1,4 +1,6 @@
-﻿namespace WebApp.Model
+﻿using WebApp.DTOS;
+
+namespace WebApp.Model
 {
     public class ForumThread
     {
@@ -17,6 +19,14 @@
             this.Title = Title;
             this.Content = Content;
             this.Author = Author;
+        }
+
+        public ForumThread(ForumThreadDTO dto)
+        {
+            this.Id = dto.Id;
+            this.Title = dto.Title;
+            this.Content = dto.Content;
+            this.Author = new User(dto.Author);
         }
     }
 }

@@ -5,6 +5,7 @@ namespace WebApp.DTOS
 {
     public class ForumThreadDTO
     {
+        public long Id { get; set; }
         public string Title { get; set; }
         public string Content { get; set; }
         public UserSafeDTO? Author { get; set; }
@@ -22,6 +23,7 @@ namespace WebApp.DTOS
 
         public ForumThreadDTO(ForumThread forumThread)
         {
+            this.Id = forumThread.Id;
             this.Title = forumThread.Title;
             this.Content = forumThread.Content;
             this.Author = new UserSafeDTO(forumThread.Author);
