@@ -5,11 +5,18 @@ using MySqlConnector;
 using System.Data;
 using System.Data.SqlClient;
 using System.Xml;
+using System.Net;
+using Microsoft.Extensions.FileProviders.Composite;
+using System.Web.Http;
+using WebApp.ErrorHandling;
 
 namespace Facades
 {
     internal static class UserFacade
     {
+        /// <summary>
+        /// Returns true if user was created.
+        /// </summary>
         internal static void Create(User user)
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
@@ -65,6 +72,8 @@ namespace Facades
                         Console.WriteLine("  Message: {0}", ex2.Message);
                     }
                 }
+
+                throw new API_Exception(HttpStatusCode.Conflict ,"Username was already taken.");
             }
         }
 

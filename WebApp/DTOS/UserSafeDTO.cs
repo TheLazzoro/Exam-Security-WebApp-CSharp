@@ -1,6 +1,6 @@
 ﻿namespace WebApp.DTOS
 {
-    public class UserSafeDTO
+    public struct UserSafeDTO
     {
         public string Username { get; set; }
 
