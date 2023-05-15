@@ -168,7 +168,7 @@ namespace WebApp.Facades
 
                 // PNG markers
                 reader.BaseStream.Position = 0; // reset read position.
-                UInt64 pngHeader = reader.ReadUInt64();
+                UInt64 pngHeader = reader.ReadUInt64(); // PNG header (89 50 4E 47 0D 0A 1A 0A)
 
                 isJpeg = soi == 0xd8ff && (marker & 0xe0ff) == 0xe0ff;
                 isPng = pngHeader == 0x0a1a0a0d474e5089;
@@ -182,11 +182,11 @@ namespace WebApp.Facades
                 reader.Dispose();
             }
 
-            // Save file
+            // File is valid/safe, we can continue.
 
             var user = Token.GetCurrentUser(context);
 
-            string specialFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            string specialFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Images");
             string username = user.Username;
             string dir = Path.Combine(specialFolder, username);
 
@@ -201,6 +201,11 @@ namespace WebApp.Facades
 
             fileName += ext;
             string fullNewPath = Path.Combine(dir, fileName);
+
+            if(!Directory.Exists(specialFolder))
+            {
+                // TODO:
+            }
 
             if (!Directory.Exists(dir))
             {
@@ -222,7 +227,6 @@ namespace WebApp.Facades
 
                 try
                 {
-
                     command_GetImage.CommandText = "select user_image from db_user where id = @id";
                     command_GetImage.Parameters.AddWithValue("@id", user.Id);
                     await command_GetImage.PrepareAsync();
