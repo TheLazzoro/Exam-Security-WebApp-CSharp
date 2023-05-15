@@ -54,36 +54,75 @@ namespace WebApp.Controllers
         {
             try
             {
+                bool isJpeg;
+                bool isPng;
+
+                // Analyse file
                 using (Stream s = file.OpenReadStream())
                 {
-                    // Analyse file
                     BinaryReader reader = new BinaryReader(s);
-                    var jpeg_marker = reader.ReadBytes(3);
 
-                    await file.OpenReadStream().CopyToAsync(s);
+                    // JFIF markers
+                    UInt16 soi = reader.ReadUInt16();    // Start of Image (SOI) marker (FFD8)
+                    UInt16 marker = reader.ReadUInt16(); // JFIF marker (FFE0) or EXIF marker(FFE1)
 
-                    // Save file
+                    // PNG markers
+                    reader.BaseStream.Position = 0; // reset read position.
+                    UInt64 pngHeader = reader.ReadUInt64();
 
-                    var user = Token.GetCurrentUser(HttpContext);
-                    string specialFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                    string username = user.Username;
+                    isJpeg = soi == 0xd8ff && (marker & 0xe0ff) == 0xe0ff;
+                    isPng = pngHeader == 0x0a1a0a0d474e5089;
 
-                    string path = "C:/Users/Lasse Dam/Desktop/MyFile";
-                    string dir = Path.GetDirectoryName(path);
-                    if (!Directory.Exists(dir))
+                    bool isFileValid = isJpeg || isPng;
+                    if (!isFileValid)
                     {
-                        Directory.CreateDirectory(dir);
+                        throw new API_Exception(HttpStatusCode.BadRequest, "Invalid file type.");
                     }
+
+                    reader.Dispose();
+                }
+
+                // Save file
+
+                var user = Token.GetCurrentUser(HttpContext);
+
+                string specialFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                string username = user.Username;
+                string dir = Path.Combine(specialFolder, username);
+
+                // re-construct file extension
+                string fileName = Path.GetFileNameWithoutExtension(file.FileName);
+                string ext = string.Empty;
+
+                if (isJpeg)
+                    ext = ".jpg";
+                else if (isPng)
+                    ext = ".png";
+
+                fileName += ext;
+                string fullpath = Path.Combine(dir, fileName);
+
+                if (!Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
+
+                using (FileStream fileStream = System.IO.File.Create(fullpath))
+                {
+                    await file.CopyToAsync(fileStream);
                 }
 
 
                 return Ok();
             }
+            catch (API_Exception ex)
+            {
+                throw new API_Exception(HttpStatusCode.BadRequest, "Invalid file type.");
+            }
             catch (Exception ex)
             {
-                return Problem();
+                return BadRequest();
             }
-
         }
     }
 }
