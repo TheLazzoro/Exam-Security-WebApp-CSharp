@@ -46,5 +46,44 @@ namespace WebApp.Controllers
             return Ok(msg);
         }
 
+
+        [HttpPost]
+        [Route("Image-Upload")]
+        [Authorize(Roles = "user")]
+        public async Task<IActionResult> UploadImage([FromForm] IFormFile file)
+        {
+            try
+            {
+                using (Stream s = file.OpenReadStream())
+                {
+                    // Analyse file
+                    BinaryReader reader = new BinaryReader(s);
+                    var jpeg_marker = reader.ReadBytes(3);
+
+                    await file.OpenReadStream().CopyToAsync(s);
+
+                    // Save file
+
+                    var user = Token.GetCurrentUser(HttpContext);
+                    string specialFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                    string username = user.Username;
+
+                    string path = "C:/Users/Lasse Dam/Desktop/MyFile";
+                    string dir = Path.GetDirectoryName(path);
+                    if (!Directory.Exists(dir))
+                    {
+                        Directory.CreateDirectory(dir);
+                    }
+                }
+
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return Problem();
+            }
+
+        }
     }
 }
