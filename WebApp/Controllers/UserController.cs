@@ -18,11 +18,9 @@ namespace WebApp.Controllers
     {
         [HttpGet]
         [Authorize(Roles = "user")]
-        public IEnumerable<string> Get()
+        public IActionResult Get()
         {
-            var currentUser = Token.GetCurrentUser(HttpContext);
-
-            return new string[] { "value1", "value2" };
+            return Ok();
         }
 
         [HttpGet("{id}")]

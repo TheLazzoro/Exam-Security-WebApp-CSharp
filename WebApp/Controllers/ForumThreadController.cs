@@ -30,5 +30,11 @@ namespace WebApp.Controllers
             var dto = new ForumThreadDTO(forumThread);
             return Ok(dto);
         }
+
+        [HttpGet]
+        public IEnumerable<ForumThreadDTO> GetAll()
+        {
+            return ForumThreadFacade.GetAll().ToArray();
+        }
     }
 }

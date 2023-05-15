@@ -9,6 +9,7 @@ using System.Net;
 using Microsoft.IdentityModel.Tokens;
 using WebApp.Model;
 using WebApp.Facades;
+using System.Text.Json.Nodes;
 
 namespace WebApp.Controllers
 {
@@ -36,7 +37,11 @@ namespace WebApp.Controllers
             }
 
             var token = GenerateToken(user);
-            return Ok(token);
+            JsonObject jsonToken = new JsonObject();
+            jsonToken.Add("token", token);
+            jsonToken.Add("username", user.Username);
+
+            return Ok(jsonToken);
         }
 
         private string GenerateToken(User user)
@@ -46,9 +51,9 @@ namespace WebApp.Controllers
 
             var claims = new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Username),
+                new Claim("username", user.Username),
                 new Claim(ClaimTypes.Role, user.Role),
-                new Claim(ClaimTypes.UserData, user.Id.ToString()),
+                new Claim("id", user.Id.ToString()),
             };
 
             var token = new JwtSecurityToken(

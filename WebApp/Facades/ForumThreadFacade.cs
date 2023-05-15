@@ -2,6 +2,7 @@
 using System.Data;
 using System.Net;
 using WebApp.Database;
+using WebApp.DTOS;
 using WebApp.ErrorHandling;
 using WebApp.Model;
 
@@ -99,6 +100,42 @@ namespace WebApp.Facades
                 };
 
                 return forumThread;
+            }
+        }
+
+        internal static List<ForumThreadDTO> GetAll()
+        {
+            using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
+            {
+                connection.Open();
+                MySqlCommand command = connection.CreateCommand();
+                command.Connection = connection;
+
+                command.CommandText = "select * from db_forum_thread ";
+
+
+                MySqlDataReader reader = command.ExecuteReader();
+                List<ForumThreadDTO> list = new();
+                if (reader.Read())
+                {
+                    long id = (long)reader["id"];
+                    string title = reader["title"].ToString();
+                    string content = reader["content"].ToString();
+                    long userId = (long)reader["user_Id"];
+                    var user = UserFacade.Get(userId);
+                    var thread = new ForumThread()
+                    {
+                        Id = id,
+                        Title = title,
+                        Content = content,
+                        Author = user
+                    };
+
+                    var dto = new ForumThreadDTO(thread);
+                    list.Add(dto);
+                }
+
+                return list;
             }
         }
     }

@@ -17,9 +17,9 @@ namespace WebApp.Utility
             var userClaims = identity.Claims;
             return new User
             {
-                Username = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.NameIdentifier)?.Value,
+                Username = userClaims.FirstOrDefault(o => o.Type == "username")?.Value,
                 Role = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.Role)?.Value,
-                Id = long.Parse(userClaims.FirstOrDefault(o => o.Type == ClaimTypes.UserData)?.Value)
+                Id = long.Parse(userClaims.FirstOrDefault(o => o.Type == "id")?.Value)
             };
         }
     }
