@@ -39,7 +39,7 @@ namespace WebApp.Controllers
             User user = new User(dto.Username, dto.Password, "user");
             UserFacade.Create(user);
 
-            var msg = new MessageDTO()
+            var msg = new ResponseDTO()
             {
                 Message = "Account successfully created!",
                 StatusCode = 200
