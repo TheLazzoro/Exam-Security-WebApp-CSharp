@@ -9,6 +9,8 @@ using System.Web.Http;
 using WebApp.ErrorHandling;
 using WebApp.Model;
 using WebApp.Database;
+using WebApp.Utility;
+using System.Transactions;
 
 namespace WebApp.Facades
 {
@@ -17,16 +19,13 @@ namespace WebApp.Facades
         /// <summary>
         /// Returns true if user was created.
         /// </summary>
-        internal static void Create(User user)
+        internal static async Task Create(User user)
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
                 connection.Open();
                 MySqlCommand command = connection.CreateCommand();
-                MySqlTransaction transaction;
-
-                // Start a local transaction.
-                transaction = connection.BeginTransaction();
+                MySqlTransaction transaction = connection.BeginTransaction();
 
                 // Must assign both transaction object and connection
                 // to Command object for a pending local transaction
@@ -34,7 +33,7 @@ namespace WebApp.Facades
                 command.Transaction = transaction;
 
                 var found = Get(user.Username);
-                if(found != null)
+                if (found != null)
                 {
                     throw new API_Exception(HttpStatusCode.Conflict, "Username was already taken.");
                 }
@@ -46,11 +45,11 @@ namespace WebApp.Facades
                     command.Parameters.AddWithValue("@username", user.Username);
                     command.Parameters.AddWithValue("@password", user.Password);
                     command.Parameters.AddWithValue("@role", user.Role);
-                    command.Prepare();
-                    command.ExecuteNonQuery();
+                    await command.PrepareAsync();
+                    await command.ExecuteNonQueryAsync();
 
                     // Attempt to commit the transaction.
-                    transaction.Commit();
+                    await transaction.CommitAsync();
                     Console.WriteLine($"Created user '{user.Username}'.");
                 }
                 catch (Exception ex)
@@ -61,7 +60,7 @@ namespace WebApp.Facades
                     // Attempt to roll back the transaction.
                     try
                     {
-                        transaction.Rollback();
+                        await transaction.RollbackAsync();
                     }
                     catch (Exception ex2)
                     {
@@ -87,6 +86,7 @@ namespace WebApp.Facades
 
                 command.CommandText = "select * from db_user where username = @username";
                 command.Parameters.AddWithValue("@username", username);
+                command.Prepare();
 
                 long id = 0;
                 string? password = null;
@@ -124,6 +124,7 @@ namespace WebApp.Facades
 
                 command.CommandText = "select * from db_user where id = @id";
                 command.Parameters.AddWithValue("@id", id);
+                command.Prepare();
 
                 string? username = null;
                 string? password = null;
@@ -148,6 +149,137 @@ namespace WebApp.Facades
                 };
 
                 return user;
+            }
+        }
+
+        internal static async void UploadImage(IFormFile file, HttpContext context)
+        {
+            bool isJpeg;
+            bool isPng;
+
+            // Analyse file
+            using (Stream s = file.OpenReadStream())
+            {
+                BinaryReader reader = new BinaryReader(s);
+
+                // JFIF markers
+                UInt16 soi = reader.ReadUInt16();    // Start of Image (SOI) marker (FFD8)
+                UInt16 marker = reader.ReadUInt16(); // JFIF marker (FFE0) or EXIF marker(FFE1)
+
+                // PNG markers
+                reader.BaseStream.Position = 0; // reset read position.
+                UInt64 pngHeader = reader.ReadUInt64();
+
+                isJpeg = soi == 0xd8ff && (marker & 0xe0ff) == 0xe0ff;
+                isPng = pngHeader == 0x0a1a0a0d474e5089;
+
+                bool isFileValid = isJpeg || isPng;
+                if (!isFileValid)
+                {
+                    throw new API_Exception(HttpStatusCode.BadRequest, "Invalid file type.");
+                }
+
+                reader.Dispose();
+            }
+
+            // Save file
+
+            var user = Token.GetCurrentUser(context);
+
+            string specialFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            string username = user.Username;
+            string dir = Path.Combine(specialFolder, username);
+
+            // re-construct file name
+            string fileName = $@"{System.Guid.NewGuid()}";
+            string ext = string.Empty;
+
+            if (isJpeg)
+                ext = ".jpg";
+            else if (isPng)
+                ext = ".png";
+
+            fileName += ext;
+            string fullNewPath = Path.Combine(dir, fileName);
+
+            if (!Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+
+
+            // Before we write file,
+            // we need to update the file path for the user.
+
+            using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
+            {
+                connection.Open();
+                MySqlCommand command_GetImage = connection.CreateCommand();
+                MySqlTransaction transaction = connection.BeginTransaction();
+
+                command_GetImage.Connection = connection;
+                command_GetImage.Transaction = transaction;
+
+                try
+                {
+
+                    command_GetImage.CommandText = "select user_image from db_user where id = @id";
+                    command_GetImage.Parameters.AddWithValue("@id", user.Id);
+                    await command_GetImage.PrepareAsync();
+
+                    string? oldImagePath = null;
+                    MySqlDataReader reader = await command_GetImage.ExecuteReaderAsync();
+                    if (reader.Read())
+                    {
+                        oldImagePath = reader["user_image"].ToString();
+                    }
+                    await reader.CloseAsync();
+
+                    MySqlCommand command_UpdateImage = connection.CreateCommand();
+                    command_UpdateImage.Connection = connection;
+                    command_UpdateImage.Transaction = transaction;
+
+                    command_UpdateImage.CommandText = "update db_user set user_image = @imagePath where id = @id;";
+                    command_UpdateImage.Parameters.AddWithValue("@imagePath", fullNewPath);
+                    command_UpdateImage.Parameters.AddWithValue("@id", user.Id);
+                    await command_UpdateImage.PrepareAsync();
+                    await command_UpdateImage.ExecuteNonQueryAsync();
+                    await transaction.CommitAsync();
+
+                    // Delete old image
+                    if (oldImagePath != null && File.Exists(oldImagePath))
+                    {
+                        File.Delete(oldImagePath);
+                    }
+
+                    // Write new image
+                    using (FileStream fileStream = File.Create(fullNewPath))
+                    {
+                        file.CopyTo(fileStream);
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Commit Exception Type: {0}", ex.GetType());
+                    Console.WriteLine("  Message: {0}", ex.Message);
+
+                    // Attempt to roll back the transaction.
+                    try
+                    {
+                        await transaction.RollbackAsync();
+                    }
+                    catch (Exception ex2)
+                    {
+                        // This catch block will handle any errors that may have occurred
+                        // on the server that would cause the rollback to fail, such as
+                        // a closed connection.
+                        Console.WriteLine("Rollback Exception Type: {0}", ex2.GetType());
+                        Console.WriteLine("  Message: {0}", ex2.Message);
+                    }
+
+                    throw new API_Exception(HttpStatusCode.InternalServerError, "Internal server error.");
+                }
             }
         }
     }

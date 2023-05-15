@@ -10,6 +10,7 @@ using Microsoft.IdentityModel.Tokens;
 using WebApp.Model;
 using WebApp.Facades;
 using System.Text.Json.Nodes;
+using WebApp.ErrorHandling;
 
 namespace WebApp.Controllers
 {
@@ -74,7 +75,7 @@ namespace WebApp.Controllers
 
             if (user == null)
             {
-                throw new System.Web.Http.HttpResponseException(HttpStatusCode.NotFound);
+                throw new API_Exception(HttpStatusCode.NotFound, "Login failed.");
             }
 
             if (user.VerifyPassword(password))
