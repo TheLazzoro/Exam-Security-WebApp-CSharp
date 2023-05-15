@@ -20,7 +20,7 @@ namespace WebApp.ErrorHandling
             {
                 context.Response.ContentType = "application/json";
                 context.Response.StatusCode = (int)ex.StatusCode;
-                var error = new Error
+                var error = new MessageDTO
                 {
                     StatusCode = context.Response.StatusCode,
                     Message = ex.Message
@@ -41,7 +41,7 @@ namespace WebApp.ErrorHandling
                 {
                     message = "Internal server error.";
                 }
-                var error = new Error
+                var error = new MessageDTO
                 {
                     StatusCode = context.Response.StatusCode,
                     Message = message

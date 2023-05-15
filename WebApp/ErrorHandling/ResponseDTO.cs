@@ -2,7 +2,7 @@
 
 namespace WebApp.ErrorHandling
 {
-    public struct Error
+    public struct ResponseDTO
     {
         public int StatusCode { get; set; }
         public string? Message { get; set; }

@@ -33,6 +33,12 @@ namespace WebApp.Facades
                 command.Connection = connection;
                 command.Transaction = transaction;
 
+                var found = Get(user.Username);
+                if(found != null)
+                {
+                    throw new API_Exception(HttpStatusCode.Conflict, "Username was already taken.");
+                }
+
                 try
                 {
                     // Prepared statement query
@@ -65,9 +71,9 @@ namespace WebApp.Facades
                         Console.WriteLine("Rollback Exception Type: {0}", ex2.GetType());
                         Console.WriteLine("  Message: {0}", ex2.Message);
                     }
-                }
 
-                throw new API_Exception(HttpStatusCode.Conflict ,"Username was already taken.");
+                    throw new API_Exception(HttpStatusCode.InternalServerError, "Internal server error.");
+                }
             }
         }
 
@@ -93,7 +99,7 @@ namespace WebApp.Facades
                     role = reader["user_role"].ToString();
                 }
 
-                if (username == null)
+                if (id == 0)
                     return null;
 
                 User user = new User()

@@ -43,6 +43,18 @@ builder.Services.AddAuthentication(x =>
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("corspolicy", build =>
+    {
+        build.WithOrigins("http://localhost:5173").AllowAnyMethod().AllowAnyHeader();
+    });
+});
+
+// Enable single domain
+// Enable multiple domains
+// Enable any domain
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -53,6 +65,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
     Globals.IsDevelopment = true;
 }
+
+app.UseCors("corspolicy");
 
 app.UseHttpsRedirection();
 
