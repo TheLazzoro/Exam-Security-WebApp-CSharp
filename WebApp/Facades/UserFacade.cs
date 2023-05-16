@@ -152,13 +152,13 @@ namespace WebApp.Facades
             }
         }
 
-        internal static async void UploadImage(IFormFile file, HttpContext context)
+        internal static async void UploadImage(byte[] file, HttpContext context)
         {
             bool isJpeg;
             bool isPng;
 
             // Analyse file
-            using (Stream s = file.OpenReadStream())
+            using (Stream s = new MemoryStream(file))
             {
                 BinaryReader reader = new BinaryReader(s);
 
@@ -178,8 +178,6 @@ namespace WebApp.Facades
                 {
                     throw new API_Exception(HttpStatusCode.BadRequest, "Invalid file type.");
                 }
-
-                reader.Dispose();
             }
 
             // File is valid/safe, we can continue.
@@ -259,7 +257,8 @@ namespace WebApp.Facades
                     // Write new image
                     using (FileStream fileStream = File.Create(fullNewPath))
                     {
-                        file.CopyTo(fileStream);
+                        var s = new MemoryStream(file);
+                        s.CopyTo(fileStream);
                     }
 
                 }

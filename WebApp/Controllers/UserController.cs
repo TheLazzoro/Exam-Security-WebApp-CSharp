@@ -52,7 +52,17 @@ namespace WebApp.Controllers
         [Authorize(Roles = "user")]
         public async Task<IActionResult> UploadImage([FromForm] IFormFile file)
         {
-            UserFacade.UploadImage(file, HttpContext);
+            byte[] buffer = new byte[file.Length];
+            using (MemoryStream ms = new MemoryStream())
+            {
+                int read;
+                Stream s = file.OpenReadStream();
+                while ((read = s.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    ms.Write(buffer, 0, read);
+                }
+            }
+            UserFacade.UploadImage(buffer, HttpContext);
             var msg = new ResponseDTO()
             {
                 Message = "Uploaded image.",
