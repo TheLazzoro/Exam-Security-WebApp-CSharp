@@ -62,7 +62,7 @@ namespace WebApp.Controllers
                     ms.Write(buffer, 0, read);
                 }
             }
-            UserFacade.UploadImage(buffer, HttpContext);
+            await UserFacade.UploadImage(buffer, HttpContext);
             var msg = new ResponseDTO()
             {
                 Message = "Uploaded image.",
@@ -70,6 +70,14 @@ namespace WebApp.Controllers
             };
 
             return Ok(msg);
+        }
+
+        [HttpGet("Image-Get/{userId}")]
+        //[Route("Image-Get")]
+        public async Task<IActionResult> GetUserImage(long userId)
+        {
+            string path = UserFacade.GetUserImagePath(userId);
+            return PhysicalFile(path, "image/jpg");
         }
     }
 }

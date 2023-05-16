@@ -152,7 +152,7 @@ namespace WebApp.Facades
             }
         }
 
-        internal static async void UploadImage(byte[] file, HttpContext context)
+        internal static async Task UploadImage(byte[] file, HttpContext context)
         {
             bool isJpeg;
             bool isPng;
@@ -283,6 +283,34 @@ namespace WebApp.Facades
 
                     throw new API_Exception(HttpStatusCode.InternalServerError, "Internal server error.");
                 }
+            }
+        }
+
+        internal static string GetUserImagePath(long userId)
+        {
+            using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
+            {
+                connection.Open();
+                MySqlCommand command = connection.CreateCommand();
+                command.Connection = connection;
+
+                command.CommandText = "select user_image from db_user where id = @id";
+                command.Parameters.AddWithValue("@id", userId);
+                command.Prepare();
+
+                string imagePath = string.Empty;
+                MySqlDataReader reader = command.ExecuteReader();
+                if(reader.Read())
+                {
+                    imagePath = reader["user_image"].ToString();
+                }
+
+                if(string.IsNullOrEmpty(imagePath))
+                {
+                    imagePath = Path.Combine(Directory.GetCurrentDirectory(), "Images/Default.png");
+                }
+
+                return imagePath;
             }
         }
     }
