@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using MySqlConnector;
 using WebApp.ErrorHandling;
 using WebApp;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
@@ -69,6 +70,14 @@ if (app.Environment.IsDevelopment())
 app.UseCors("corspolicy");
 
 app.UseHttpsRedirection();
+
+app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions()
+{
+    FileProvider = new PhysicalFileProvider(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Images")),
+    RequestPath = new PathString("/Images")
+});
+app.UseRouting();
 
 // This sequence of using these two is important. First authentication, then authorization.
 app.UseAuthentication();

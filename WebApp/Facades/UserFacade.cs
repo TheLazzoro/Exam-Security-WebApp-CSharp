@@ -154,10 +154,11 @@ namespace WebApp.Facades
 
         internal static async Task UploadImage(byte[] file, HttpContext context)
         {
-            bool isJpeg;
-            bool isPng;
+            bool isJpeg = true;
+            bool isPng = false;
 
             // Analyse file
+            /*
             using (Stream s = new MemoryStream(file))
             {
                 BinaryReader reader = new BinaryReader(s);
@@ -179,14 +180,15 @@ namespace WebApp.Facades
                     throw new API_Exception(HttpStatusCode.BadRequest, "Invalid file type.");
                 }
             }
+            */
 
             // File is valid/safe, we can continue.
 
             var user = Token.GetCurrentUser(context);
 
-            string specialFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Images");
+            string localDir = Globals.LocalImageDir;
             string username = user.Username;
-            string dir = Path.Combine(specialFolder, username);
+            string dir = Path.Combine(localDir, username);
 
             // re-construct file name
             string fileName = $@"{System.Guid.NewGuid()}";
@@ -200,7 +202,7 @@ namespace WebApp.Facades
             fileName += ext;
             string fullNewPath = Path.Combine(dir, fileName);
 
-            if(!Directory.Exists(specialFolder))
+            if(!Directory.Exists(localDir))
             {
                 // TODO:
             }
@@ -286,7 +288,16 @@ namespace WebApp.Facades
             }
         }
 
-        internal static string GetUserImagePath(long userId)
+        /// <summary>
+        /// Slight overhead on this method, since we need to find the user by username first.
+        /// </summary>
+        internal static string GetUserImagePath(string username, HttpContext context)
+        {
+            var user = Get(username);
+            return GetUserImagePath(user.Id, context);
+        }
+
+        internal static string GetUserImagePath(long userId, HttpContext context)
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
@@ -294,23 +305,28 @@ namespace WebApp.Facades
                 MySqlCommand command = connection.CreateCommand();
                 command.Connection = connection;
 
-                command.CommandText = "select user_image from db_user where id = @id";
+                command.CommandText = "select username, user_image from db_user where id = @id";
                 command.Parameters.AddWithValue("@id", userId);
                 command.Prepare();
 
                 string imagePath = string.Empty;
+                string username = string.Empty;
                 MySqlDataReader reader = command.ExecuteReader();
                 if(reader.Read())
                 {
                     imagePath = reader["user_image"].ToString();
+                    username = reader["username"].ToString();
                 }
 
-                if(string.IsNullOrEmpty(imagePath))
+                if (string.IsNullOrEmpty(imagePath))
                 {
-                    imagePath = Path.Combine(Directory.GetCurrentDirectory(), "Images/Default.png");
+                    return Path.Combine(Directory.GetCurrentDirectory(), "Images/Default.png");
                 }
 
-                return imagePath;
+                string host = $"{context.Request.Scheme}://{context.Request.Host}";
+                string filepath = "/Images/" + username + "/" + Path.GetFileName(imagePath);
+
+                return host + filepath;
             }
         }
     }

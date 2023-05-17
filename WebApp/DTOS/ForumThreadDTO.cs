@@ -5,7 +5,7 @@ namespace WebApp.DTOS
 {
     public class ForumThreadDTO
     {
-        public long Id { get; set; }
+        public long? Id { get; set; }
         public string Title { get; set; }
         public string Content { get; set; }
         public UserSafeDTO? Author { get; set; }

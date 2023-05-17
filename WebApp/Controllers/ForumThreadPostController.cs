@@ -16,9 +16,8 @@ namespace WebApp.Controllers
         public IActionResult Create([FromBody] ForumThreadPostDTO dto)
         {
             var currentUser = Token.GetCurrentUser(HttpContext); // Get user from token rather than from the dto.
-            ForumThread thread = new ForumThread(dto.Thread);
 
-            ForumThreadPost forumThreadPost = new ForumThreadPost(dto.Content, currentUser, thread);
+            ForumThreadPost forumThreadPost = new ForumThreadPost(dto.Content, currentUser, dto.ThreadId);
             ForumThreadPostFacade.Create(forumThreadPost);
 
             return Ok();
@@ -30,6 +29,12 @@ namespace WebApp.Controllers
             var forumThreadPost = ForumThreadPostFacade.Get(id);
             var dto = new ForumThreadPostDTO(forumThreadPost);
             return Ok(dto);
+        }
+
+        [HttpGet("Thread/{id}")]
+        public IEnumerable<ForumThreadPostDTO> GetByThreadId(long id)
+        {
+            return ForumThreadPostFacade.GetByThreadId(id).ToArray();
         }
     }
 }

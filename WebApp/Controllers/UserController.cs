@@ -73,11 +73,34 @@ namespace WebApp.Controllers
         }
 
         [HttpGet("Image-Get/{userId}")]
-        //[Route("Image-Get")]
         public async Task<IActionResult> GetUserImage(long userId)
         {
-            string path = UserFacade.GetUserImagePath(userId);
-            return PhysicalFile(path, "image/jpg");
+            string path = UserFacade.GetUserImagePath(userId, HttpContext);
+            var msg = new ResponseDTO()
+            {
+                StatusCode = 200,
+                Message = path
+            };
+
+            return Ok(msg);
+        }
+
+        [HttpGet("Image-Get-By-Username/{username}")]
+        public async Task<IActionResult> GetUserImage(string username)
+        {
+            var user = UserFacade.Get(username);
+            if(user == null)
+            {
+                throw new API_Exception(HttpStatusCode.NotFound, $"User '{username}' was not found.");
+            }
+            string path = UserFacade.GetUserImagePath(user.Id, HttpContext);
+            var msg = new ResponseDTO()
+            {
+                StatusCode = 200,
+                Message = path
+            };
+
+            return Ok(msg);
         }
     }
 }

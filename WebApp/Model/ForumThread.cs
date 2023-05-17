@@ -4,7 +4,7 @@ namespace WebApp.Model
 {
     public class ForumThread
     {
-        public long Id { get; set; }
+        public long? Id { get; set; }
         public string Title { get; set; }
         public string Content { get; set; }
         public User Author { get; set; }

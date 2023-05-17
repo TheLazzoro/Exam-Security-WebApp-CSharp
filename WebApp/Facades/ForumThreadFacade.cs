@@ -116,7 +116,7 @@ namespace WebApp.Facades
 
                 MySqlDataReader reader = command.ExecuteReader();
                 List<ForumThreadDTO> list = new();
-                if (reader.Read())
+                while (reader.Read())
                 {
                     long id = (long)reader["id"];
                     string title = reader["title"].ToString();

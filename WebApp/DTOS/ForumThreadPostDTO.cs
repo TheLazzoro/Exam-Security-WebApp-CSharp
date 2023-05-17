@@ -5,9 +5,10 @@ namespace WebApp.DTOS
 {
     public class ForumThreadPostDTO
     {
+        public long? Id { get; set; }
         public string Content { get; set; }
         public UserSafeDTO? Author { get; set; }
-        public ForumThreadDTO? Thread { get; set; }
+        public long ThreadId { get; set; }
 
         public ForumThreadPostDTO()
         {
@@ -17,14 +18,15 @@ namespace WebApp.DTOS
         {
             this.Content = Content;
             this.Author = Author;
-            this.Thread = Thread;
+            this.ThreadId = ThreadId;
         }
 
         public ForumThreadPostDTO(ForumThreadPost post)
         {
+            this.Id = post.Id;
             this.Content = post.Content;
             this.Author = new UserSafeDTO(post.Author);
-            this.Thread = new ForumThreadDTO(post.Thread);
+            this.ThreadId = post.ThreadId;
         }
 
         public override string ToString()

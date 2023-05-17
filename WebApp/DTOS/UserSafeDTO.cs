@@ -4,6 +4,7 @@ namespace WebApp.DTOS
 {
     public class UserSafeDTO
     {
+        public long Id { get; set; }
         public string Username { get; set; }
         public string? Role { get; set; }
 
@@ -19,6 +20,7 @@ namespace WebApp.DTOS
 
         public UserSafeDTO(User user)
         {
+            this.Id = user.Id;
             this.Username = user.Username;
             this.Role = user.Role;
         }

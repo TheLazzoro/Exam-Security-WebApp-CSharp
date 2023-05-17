@@ -2,6 +2,7 @@
 using System.Data;
 using System.Net;
 using WebApp.Database;
+using WebApp.DTOS;
 using WebApp.ErrorHandling;
 using WebApp.Model;
 
@@ -31,7 +32,7 @@ namespace WebApp.Facades
                     command.CommandText = "Insert into db_forum_thread_post (content, user_id, forum_thread_Id) VALUES (@content, @userId, @forumThreadId)";
                     command.Parameters.AddWithValue("@content", forumThreadPost.Content);
                     command.Parameters.AddWithValue("@userId", forumThreadPost.Author.Id);
-                    command.Parameters.AddWithValue("@forumThreadId", forumThreadPost.Thread.Id);
+                    command.Parameters.AddWithValue("@forumThreadId", forumThreadPost.ThreadId);
                     command.Prepare();
                     command.ExecuteNonQuery();
 
@@ -74,14 +75,12 @@ namespace WebApp.Facades
                 command.CommandText = "select * from db_forum_thread_post where id = @id";
                 command.Parameters.AddWithValue("@id", id);
 
-                string? title = null;
                 string? content = null;
                 long userId = 0;
                 long threadId = 0;
                 MySqlDataReader reader = command.ExecuteReader();
                 if (reader.Read())
                 {
-                    title = reader["title"].ToString();
                     content = reader["content"].ToString();
                     userId = (long)reader["user_Id"];
                     threadId = (long)reader["forum_thread_Id"];
@@ -98,10 +97,52 @@ namespace WebApp.Facades
                     Id = id,
                     Content = content,
                     Author = author,
-                    Thread = thread
+                    ThreadId = (long)thread.Id
                 };
 
                 return forumThreadPost;
+            }
+        }
+
+        internal static List<ForumThreadPostDTO>? GetByThreadId(long id)
+        {
+            using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
+            {
+                connection.Open();
+                MySqlCommand command = connection.CreateCommand();
+                command.Connection = connection;
+
+                command.CommandText = "select * from db_forum_thread_post where forum_thread_Id = @id";
+                command.Parameters.AddWithValue("@id", id);
+
+                string? title = null;
+                string? content = null;
+                long userId = 0;
+                long threadId = 0;
+                MySqlDataReader reader = command.ExecuteReader();
+                List<ForumThreadPostDTO> list = new List<ForumThreadPostDTO>();
+                while (reader.Read())
+                {
+                    long postId = (long)reader["id"];
+                    content = reader["content"].ToString();
+                    userId = (long)reader["user_Id"];
+                    threadId = (long)reader["forum_thread_Id"];
+
+                    User author = UserFacade.Get(userId);
+                    ForumThread thread = ForumThreadFacade.Get(threadId);
+                    ForumThreadPost forumThreadPost = new ForumThreadPost
+                    {
+                        Id = postId,
+                        Content = content,
+                        Author = author,
+                        ThreadId = (long)thread.Id
+                    };
+
+                    ForumThreadPostDTO dto = new ForumThreadPostDTO(forumThreadPost);
+                    list.Add(dto);
+                }
+
+                return list;
             }
         }
     }
