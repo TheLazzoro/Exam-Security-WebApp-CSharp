@@ -36,5 +36,15 @@ namespace WebApp.Controllers
         {
             return ForumThreadPostFacade.GetByThreadId(id).ToArray();
         }
+
+        [HttpDelete("{id}")]
+        [Authorize]
+        public async Task<IActionResult> Delete(long id)
+        {
+            var user = Token.GetCurrentUser(HttpContext);
+            await ForumThreadPostFacade.Delete(user, id);
+
+            return Ok();
+        }
     }
 }

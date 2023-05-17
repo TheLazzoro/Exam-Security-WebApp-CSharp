@@ -16,19 +16,12 @@ namespace WebApp.Facades
             {
                 connection.Open();
                 MySqlCommand command = connection.CreateCommand();
-                MySqlTransaction transaction;
-
-                // Start a local transaction.
-                transaction = connection.BeginTransaction();
-
-                // Must assign both transaction object and connection
-                // to Command object for a pending local transaction
+                MySqlTransaction transaction = connection.BeginTransaction();
                 command.Connection = connection;
                 command.Transaction = transaction;
 
                 try
                 {
-                    // Prepared statement query
                     command.CommandText = "Insert into db_forum_thread_post (content, user_id, forum_thread_Id) VALUES (@content, @userId, @forumThreadId)";
                     command.Parameters.AddWithValue("@content", forumThreadPost.Content);
                     command.Parameters.AddWithValue("@userId", forumThreadPost.Author.Id);
@@ -36,7 +29,6 @@ namespace WebApp.Facades
                     command.Prepare();
                     command.ExecuteNonQuery();
 
-                    // Attempt to commit the transaction.
                     transaction.Commit();
                     Console.WriteLine($"Created user forum thread post.");
                 }
@@ -52,9 +44,6 @@ namespace WebApp.Facades
                     }
                     catch (Exception ex2)
                     {
-                        // This catch block will handle any errors that may have occurred
-                        // on the server that would cause the rollback to fail, such as
-                        // a closed connection.
                         Console.WriteLine("Rollback Exception Type: {0}", ex2.GetType());
                         Console.WriteLine("  Message: {0}", ex2.Message);
                     }
@@ -74,6 +63,7 @@ namespace WebApp.Facades
 
                 command.CommandText = "select * from db_forum_thread_post where id = @id";
                 command.Parameters.AddWithValue("@id", id);
+                command.Prepare();
 
                 string? content = null;
                 long userId = 0;
@@ -114,6 +104,7 @@ namespace WebApp.Facades
 
                 command.CommandText = "select * from db_forum_thread_post where forum_thread_Id = @id";
                 command.Parameters.AddWithValue("@id", id);
+                command.Prepare();
 
                 string? title = null;
                 string? content = null;
@@ -143,6 +134,47 @@ namespace WebApp.Facades
                 }
 
                 return list;
+            }
+        }
+
+        internal static async Task Delete(User user, long id)
+        {
+            ForumThreadPost post = Get(id);
+            if (post.Author.Id != user.Id)
+            {
+                throw new API_Exception(HttpStatusCode.Unauthorized, "Cannot delete another user's post.");
+            }
+
+            using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
+            {
+                connection.Open();
+                MySqlCommand command = connection.CreateCommand();
+                MySqlTransaction transaction = connection.BeginTransaction();
+                command.Connection = connection;
+                command.Transaction = transaction;
+
+                try
+                {
+                    command.CommandText = "delete from db_forum_thread_post where id = @id";
+                    command.Parameters.AddWithValue("@id", id);
+                    command.Prepare();
+                    command.ExecuteNonQuery();
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        transaction.Rollback();
+                    }
+                    catch (Exception ex2)
+                    {
+                        Console.WriteLine("Rollback Exception Type: {0}", ex2.GetType());
+                        Console.WriteLine("  Message: {0}", ex2.Message);
+                    }
+
+                    throw new API_Exception(HttpStatusCode.InternalServerError, "Internal server error");
+                }
             }
         }
     }

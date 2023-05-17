@@ -7,6 +7,7 @@ using WebApp.ErrorHandling;
 using WebApp.Model;
 using WebApp.Facades;
 using WebApp.Utility;
+using System.Net.Mime;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -50,8 +51,14 @@ namespace WebApp.Controllers
         [HttpPost]
         [Route("Image-Upload")]
         [Authorize(Roles = "user")]
+        [RequestSizeLimit(1024 * 1024 * 10)] // 10 MB
         public async Task<IActionResult> UploadImage([FromForm] IFormFile file)
         {
+            if(!file.ContentType.StartsWith("image/"))
+            {
+                return BadRequest("Only images are supported.");
+            }
+
             byte[] buffer = new byte[file.Length];
             using (MemoryStream ms = new MemoryStream())
             {
