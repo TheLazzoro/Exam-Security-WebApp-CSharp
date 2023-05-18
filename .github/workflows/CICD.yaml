@@ -22,12 +22,12 @@ jobs:
       - name: Build
         run: dotnet build --configuration Release --no-restore
 
-      - name: Replacing container
-        uses: appleboy/ssh-action@master
+      - name: Copy via scp
+        uses: garygrossgarten/github-action-scp@v0.5.3
         with:
+          local: /home/runner/work/thelazzoro/thelazzoro/src/deploy/
           host: ${{ secrets.SERVER_HOSTNAME }}
+          remote: ${{ secrets.SERVER_REMOTE_DIR }}
           username: ${{ secrets.SERVER_USERNAME }}
           passphrase: ${{ secrets.SERVER_PASSWORD }}
-          key: ${{ secrets.KEY }}
-          script: |
-            dotnet publish -c Release -o /var/www/security-app
+          privateKey: ${{ secrets.KEY }}
