@@ -48,30 +48,30 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("corspolicy", build =>
     {
-        build.WithOrigins("http://localhost:5173").AllowAnyMethod().AllowAnyHeader();
+        build.WithOrigins("http://localhost:5173").AllowAnyMethod().AllowAnyHeader(); // Enables a single domain
     });
 });
 
-// Enable single domain
-// Enable multiple domains
-// Enable any domain
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+// All requests are routed through the middleware before they get to the endpoint method.
 app.UseMiddleware<ExceptionMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
     Globals.IsDevelopment = true;
+
+    // In the production environment we use NGINX for HTTPS.
+    app.UseHttpsRedirection();
 }
 
 app.UseCors("corspolicy");
 
-app.UseHttpsRedirection();
 
-app.UseStaticFiles();
 app.UseStaticFiles(new StaticFileOptions()
 {
     FileProvider = new PhysicalFileProvider(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Images")),
