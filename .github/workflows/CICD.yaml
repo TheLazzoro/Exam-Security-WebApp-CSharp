@@ -23,11 +23,11 @@ jobs:
         run: dotnet build --configuration Release --no-restore -o deploy
 
       - name: Copy via ssh
-        uses: garygrossgarten/github-action-scp@v0.8.0
+        uses: appleboy/scp-action@v0.1.4
         with:
-          local: /home/runner/work/thelazzoro/thelazzoro/src/deploy/
+          source: /home/runner/work/thelazzoro/thelazzoro/src/deploy/
           host: ${{ secrets.SERVER_HOSTNAME }}
-          remote: ${{ secrets.SERVER_REMOTE_DIR }}
+          target: ${{ secrets.SERVER_REMOTE_DIR }}
           username: ${{ secrets.SERVER_USERNAME }}
           passphrase: ${{ secrets.SERVER_PASSWORD }}
-          privateKey: ${{ secrets.KEY }}
+          key: ${{ secrets.KEY }}
