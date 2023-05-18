@@ -25,7 +25,7 @@ jobs:
       - name: Copy via ssh
         uses: appleboy/scp-action@v0.1.4
         with:
-          source: /home/runner/work/Exam-Security-WebApp-CSharp/Exam-Security-WebApp-CSharp/deploy/WebApp.dll
+          source: /home/runner/work/Exam-Security-WebApp-CSharp/Exam-Security-WebApp-CSharp/deploy/
           host: ${{ secrets.SERVER_HOSTNAME }}
           target: ${{ secrets.SERVER_REMOTE_DIR }}
           username: ${{ secrets.SERVER_USERNAME }}
