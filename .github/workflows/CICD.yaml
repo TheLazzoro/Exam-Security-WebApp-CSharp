@@ -31,3 +31,12 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           passphrase: ${{ secrets.SERVER_PASSWORD }}
           key: ${{ secrets.KEY }}
+      
+      - name: Start Server (SSH command)
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          command: sudo dotnet /home/runner/work/Exam-Security-WebApp-CSharp/Exam-Security-WebApp-CSharp/deploy/WebApp.dll
+          host: ${{ secrets.SERVER_HOSTNAME }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          passphrase: ${{ secrets.SERVER_PASSWORD }}
+          key: ${{ secrets.KEY }}
