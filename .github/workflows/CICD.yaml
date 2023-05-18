@@ -20,7 +20,7 @@ jobs:
         run: dotnet restore
       
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build --configuration Release --no-restore -o deploy
 
       - name: Copy via ssh
         uses: garygrossgarten/github-action-scp@v0.8.0
