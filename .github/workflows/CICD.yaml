@@ -35,7 +35,7 @@ jobs:
       - name: Start Server (SSH command)
         uses: appleboy/ssh-action@v0.1.10
         with:
-          script: ${{ secrets.COMMAND_RUN_SERVER }}
+          #script: ${{ secrets.COMMAND_RUN_SERVER }} # atm this command hangs in GitHub Actions.
           host: ${{ secrets.SERVER_HOSTNAME }}
           username: ${{ secrets.SERVER_USERNAME }}
           passphrase: ${{ secrets.SERVER_PASSWORD }}

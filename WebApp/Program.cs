@@ -5,6 +5,7 @@ using MySqlConnector;
 using WebApp.ErrorHandling;
 using WebApp;
 using Microsoft.Extensions.FileProviders;
+using WebApp.Utility;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
@@ -30,25 +31,17 @@ builder.Services.AddAuthentication(x =>
     x.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(x =>
 {
-    x.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = false,
-        ValidateAudience = false,
-        //ValidIssuer = config["Jwt:Issuer"],
-        //ValidAudience = config["Jwt:Audience"],
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(SharedSecret.GetSharedKey()),
-    };
+    x.TokenValidationParameters = Token.GetValidationParameters();
 });
 
 builder.Services.AddAuthorization();
 
+string corsPolicy = "corsPolicy";
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("corspolicy", build =>
+    options.AddPolicy(corsPolicy, policy =>
     {
-        build.WithOrigins("http://localhost:5173").AllowAnyMethod().AllowAnyHeader(); // Enables a single domain
+        policy.WithOrigins("http://localhost:5173").AllowAnyMethod().AllowAnyHeader(); // Enables a single domain
     });
 });
 
@@ -57,7 +50,7 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 // All requests are routed through the middleware before they get to the endpoint method.
-app.UseMiddleware<ExceptionMiddleware>();
+app.UseMiddleware<Middleware>();
 
 if (app.Environment.IsDevelopment())
 {
@@ -69,7 +62,7 @@ if (app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 
-app.UseCors("corspolicy");
+app.UseCors(corsPolicy);
 
 string pathImages = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Images");
 if(!Directory.Exists(pathImages)) {

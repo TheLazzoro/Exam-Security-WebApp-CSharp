@@ -25,3 +25,8 @@ create table db_forum_thread_post (
     forum_thread_Id bigint NOT NULL REFERENCES db_forum_thread(id),
     PRIMARY KEY (id)
 );
+
+create table db_refresh_token (
+	user_Id bigint NOT NULL REFERENCES db_user(id),
+    token varchar(255) NOT NULL
+);
