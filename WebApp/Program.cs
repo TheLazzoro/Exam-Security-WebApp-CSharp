@@ -71,10 +71,13 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("corspolicy");
 
-
+string pathImages = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Images");
+if(!Directory.Exists(pathImages)) {
+    Directory.CreateDirectory(pathImages);
+}
 app.UseStaticFiles(new StaticFileOptions()
 {
-    FileProvider = new PhysicalFileProvider(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Images")),
+    FileProvider = new PhysicalFileProvider(pathImages),
     RequestPath = new PathString("/Images")
 });
 app.UseRouting();
