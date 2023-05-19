@@ -35,7 +35,7 @@ jobs:
       - name: Start Server (SSH command)
         uses: appleboy/ssh-action@v0.1.10
         with:
-          script: sudo dotnet ${{ secrets.SERVER_REMOTE_DIR }}/WebApp.dll
+          script: ${{ secrets.COMMAND_RUN_SERVER }}
           host: ${{ secrets.SERVER_HOSTNAME }}
           username: ${{ secrets.SERVER_USERNAME }}
           passphrase: ${{ secrets.SERVER_PASSWORD }}
