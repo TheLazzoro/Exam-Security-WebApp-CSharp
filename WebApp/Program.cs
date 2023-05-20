@@ -6,6 +6,9 @@ using WebApp.ErrorHandling;
 using WebApp;
 using Microsoft.Extensions.FileProviders;
 using WebApp.Utility;
+using System.Security.AccessControl;
+using System.IO;
+using System.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
@@ -64,9 +67,39 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors(corsPolicy);
 
+// Create directory for images, and set permissions.
 string pathImages = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Images");
 if(!Directory.Exists(pathImages)) {
     Directory.CreateDirectory(pathImages);
+#if _WINDOWS
+    string userName = System.Security.Principal.WindowsIdentity.GetCurrent().Name; // username of the current logged in user.
+    var fileSecurity = new FileSecurity();
+    var readRule = new FileSystemAccessRule(userName, FileSystemRights.Read, AccessControlType.Allow);
+    var writeRule = new FileSystemAccessRule(userName, FileSystemRights.Write, AccessControlType.Allow);
+    var execRule = new FileSystemAccessRule(userName, FileSystemRights.ExecuteFile, AccessControlType.Deny);
+    fileSecurity.AddAccessRule(readRule);
+    fileSecurity.AddAccessRule(writeRule);
+    fileSecurity.AddAccessRule(execRule);
+    //TODO: Still needs to apply for the folder. Unfinished.
+
+
+#else
+    using var process = new Process
+    {
+        StartInfo = new ProcessStartInfo
+        {
+            RedirectStandardOutput = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            WindowStyle = ProcessWindowStyle.Hidden,
+            FileName = "/bin/bash",
+            Arguments = $"-c chmod 644 \"{pathImages}\""
+        }
+    };
+
+    process.Start();
+    process.WaitForExit();
+#endif
 }
 app.UseStaticFiles(new StaticFileOptions()
 {

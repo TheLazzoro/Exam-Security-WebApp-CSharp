@@ -154,11 +154,10 @@ namespace WebApp.Facades
 
         internal static async Task UploadImage(byte[] file, HttpContext context)
         {
-            bool isJpeg = true;
-            bool isPng = false;
+            bool isJpeg;
+            bool isPng;
 
             // Analyse file
-            /*
             using (Stream s = new MemoryStream(file))
             {
                 BinaryReader reader = new BinaryReader(s);
@@ -180,7 +179,6 @@ namespace WebApp.Facades
                     throw new API_Exception(HttpStatusCode.BadRequest, "Invalid file type.");
                 }
             }
-            */
 
             // File is valid/safe, we can continue.
 
