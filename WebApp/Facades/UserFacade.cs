@@ -19,7 +19,7 @@ namespace WebApp.Facades
         /// <summary>
         /// Returns true if user was created.
         /// </summary>
-        internal static async Task Create(User user)
+        internal static async Task Create(UserDTO dto)
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
@@ -32,7 +32,7 @@ namespace WebApp.Facades
                 command.Connection = connection;
                 command.Transaction = transaction;
 
-                var found = Get(user.Username);
+                var found = Get(dto.Username);
                 if (found != null)
                 {
                     throw new API_Exception(HttpStatusCode.Conflict, "Username was already taken.");
@@ -40,11 +40,14 @@ namespace WebApp.Facades
 
                 try
                 {
+                    Role role_user = GetRoleByName("user");
+                    User user = new User(dto.Username, dto.Password, role_user);
+
                     // Prepared statement query
-                    command.CommandText = "Insert into db_user (username, passwd, user_role) VALUES (@username, @password, @role)";
+                    command.CommandText = "Insert into db_user (username, passwd, role_Id) VALUES (@username, @password, @roleId)";
                     command.Parameters.AddWithValue("@username", user.Username);
                     command.Parameters.AddWithValue("@password", user.Password);
-                    command.Parameters.AddWithValue("@role", user.Role);
+                    command.Parameters.AddWithValue("@roleId", user.Role.Id);
                     await command.PrepareAsync();
                     await command.ExecuteNonQueryAsync();
 
@@ -90,24 +93,25 @@ namespace WebApp.Facades
 
                 long id = 0;
                 string? password = null;
-                string? role = null;
+                long? roleId = null;
                 MySqlDataReader reader = command.ExecuteReader();
                 if (reader.Read())
                 {
                     id = (long)reader["id"];
                     password = reader["passwd"].ToString();
-                    role = reader["user_role"].ToString();
+                    roleId = (long)reader["role_Id"];
                 }
 
                 if (id == 0)
                     return null;
 
+                Role role_user = GetRoleById(roleId);
                 User user = new User()
                 {
                     Id = id,
                     Username = username,
                     Password = password,
-                    Role = role,
+                    Role = role_user,
                 };
 
                 return user;
@@ -128,18 +132,19 @@ namespace WebApp.Facades
 
                 string? username = null;
                 string? password = null;
-                string? role = null;
+                long? roleId = null;
                 MySqlDataReader reader = command.ExecuteReader();
                 if (reader.Read())
                 {
                     username = reader["username"].ToString();
                     password = reader["passwd"].ToString();
-                    role = reader["user_role"].ToString();
+                    roleId = (long)reader["role_Id"];
                 }
 
                 if (username == null)
                     return null;
 
+                Role role = GetRoleById(roleId);
                 User user = new User()
                 {
                     Id = id,
@@ -149,6 +154,62 @@ namespace WebApp.Facades
                 };
 
                 return user;
+            }
+        }
+
+        internal static Role? GetRoleById(long? id)
+        {
+            using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
+            {
+                connection.Open();
+                MySqlCommand command = connection.CreateCommand();
+                command.Connection = connection;
+
+                command.CommandText = "select * from db_role where id = @id";
+                command.Parameters.AddWithValue("@id", id);
+                command.Prepare();
+
+                Role? role = null;
+                MySqlDataReader reader = command.ExecuteReader();
+                if(reader.Read())
+                {
+                    string rolename = reader["rolename"].ToString();
+                    role = new Role()
+                    {
+                        Id = id,
+                        roleName = rolename
+                    };
+                }
+
+                return role;
+            }
+        }
+
+        internal static Role? GetRoleByName(string name)
+        {
+            using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
+            {
+                connection.Open();
+                MySqlCommand command = connection.CreateCommand();
+                command.Connection = connection;
+
+                command.CommandText = "select * from db_role where rolename = @name";
+                command.Parameters.AddWithValue("@name", name);
+                command.Prepare();
+
+                Role? role = null;
+                MySqlDataReader reader = command.ExecuteReader();
+                if (reader.Read())
+                {
+                    long id = (long)reader["id"];
+                    role = new Role()
+                    {
+                        Id = id,
+                        roleName = name
+                    };
+                }
+
+                return role;
             }
         }
 

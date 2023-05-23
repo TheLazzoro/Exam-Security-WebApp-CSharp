@@ -6,13 +6,13 @@ namespace WebApp.DTOS
     {
         public long Id { get; set; }
         public string Username { get; set; }
-        public string? Role { get; set; }
+        public RoleDTO? Role { get; set; }
 
         public UserSafeDTO()
         {
         }
 
-        public UserSafeDTO(string Username, string Role)
+        public UserSafeDTO(string Username, RoleDTO Role)
         {
             this.Username = Username;
             this.Role = Role;
@@ -22,7 +22,7 @@ namespace WebApp.DTOS
         {
             this.Id = user.Id;
             this.Username = user.Username;
-            this.Role = user.Role;
+            this.Role = new RoleDTO(user.Role);
         }
     }
 }

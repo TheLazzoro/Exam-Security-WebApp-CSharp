@@ -27,7 +27,7 @@ namespace WebApp.Utility
             var claims = new[]
             {
                 new Claim("username", user.Username),
-                new Claim(ClaimTypes.Role, user.Role),
+                new Claim(ClaimTypes.Role, user.Role.roleName),
                 new Claim("id", user.Id.ToString()),
             };
 
@@ -54,7 +54,7 @@ namespace WebApp.Utility
             return new User
             {
                 Username = userClaims.FirstOrDefault(o => o.Type == "username")?.Value,
-                Role = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.Role)?.Value,
+                Role = new Role(userClaims.FirstOrDefault(o => o.Type == ClaimTypes.Role)?.Value),
                 Id = long.Parse(userClaims.FirstOrDefault(o => o.Type == "id")?.Value)
             };
         }

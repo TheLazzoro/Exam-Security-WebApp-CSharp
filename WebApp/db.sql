@@ -5,10 +5,18 @@ create table db_user (
 	id bigint NOT NULL AUTO_INCREMENT,
     username varchar(255) NOT NULL UNIQUE,
     passwd varchar(255) NOT NULL,
-    user_role varchar(255),
+    role_Id bigint NOT NULL REFERENCES db_role(id),
     user_image varchar(260), # Note: We may need to increase this field if filepaths get really long.
 	PRIMARY KEY (id)
 );
+
+create table db_role (
+	id bigint NOT NULL AUTO_INCREMENT,
+    rolename varchar(255) NOT NULL UNIQUE,
+	PRIMARY KEY (id)
+);
+insert into db_role (rolename) values('user');
+insert into db_role (rolename) values('admin');
 
 create table db_forum_thread (
 	id bigint NOT NULL AUTO_INCREMENT,

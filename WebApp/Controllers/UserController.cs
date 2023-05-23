@@ -35,8 +35,7 @@ namespace WebApp.Controllers
         public async Task<IActionResult> CreateUser([FromBody] UserDTO dto)
         {
             //UserDTO dto = JsonConvert.DeserializeObject<UserDTO>(value);
-            User user = new User(dto.Username, dto.Password, "user");
-            await UserFacade.Create(user);
+            await UserFacade.Create(dto);
 
             var msg = new ResponseDTO()
             {
