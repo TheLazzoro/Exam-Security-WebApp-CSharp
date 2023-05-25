@@ -93,7 +93,7 @@ if(!Directory.Exists(pathImages)) {
             CreateNoWindow = true,
             WindowStyle = ProcessWindowStyle.Hidden,
             FileName = "/bin/bash",
-            Arguments = $"-c chmod 644 \"{pathImages}\""
+            Arguments = $"chmod -R 644 \"{pathImages}\""
         }
     };
 

