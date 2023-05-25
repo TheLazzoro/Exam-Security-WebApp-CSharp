@@ -19,7 +19,7 @@ namespace WebApp.Model
         public User(string username, string password, Role role)
         {
             this.Username = username;
-            this.Password = BCrypt.Net.BCrypt.HashPassword(password);
+            this.Password = BCrypt.Net.BCrypt.HashPassword(password, 11);
             this.Role = role;
         }
 
