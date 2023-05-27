@@ -29,9 +29,11 @@ namespace WebApp.Controllers
 
         [AllowAnonymous]
         [HttpPost]
-        public IActionResult Login([FromBody] UserDTO userLogin)
+        public async Task<IActionResult> Login([FromBody] UserDTO userLogin)
         {
-            var user = Authenticate(userLogin);
+            Thread.Sleep(2000);
+
+            var user = await Authenticate(userLogin);
             if (user == null)
             {
                 return NotFound("Invalid login");
@@ -47,7 +49,7 @@ namespace WebApp.Controllers
 
         
 
-        private User Authenticate(UserDTO userLogin)
+        private async Task<User> Authenticate(UserDTO userLogin)
         {
             var username = userLogin.Username;
             var password = userLogin.Password;

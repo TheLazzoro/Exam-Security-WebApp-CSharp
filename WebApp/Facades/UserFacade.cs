@@ -16,11 +16,24 @@ namespace WebApp.Facades
 {
     internal static class UserFacade
     {
+
+
         /// <summary>
         /// Returns true if user was created.
         /// </summary>
         internal static async Task Create(UserDTO dto)
         {
+            string password = dto.Password;
+            if(string.IsNullOrEmpty(password)) {
+                throw new API_Exception(HttpStatusCode.BadRequest, "Password cannot be empty.");
+            }
+            if(password.Length < 8) {
+                throw new API_Exception(HttpStatusCode.BadRequest, "Password is too short.");
+            }
+            if(!password.Any(char.IsDigit) || !password.Any(char.IsLetter) || !password.Any(char.IsSymbol)) {
+                throw new API_Exception(HttpStatusCode.BadRequest, "Password must contain at least one letter, number and symbol.");
+            }
+
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
                 connection.Open();
