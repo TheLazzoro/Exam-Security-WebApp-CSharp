@@ -30,7 +30,7 @@ namespace WebApp.Facades
             User? user = await UserFacade.Get(userDTO.Username);
             if (user == null)
             {
-                throw new API_Exception(HttpStatusCode.Unauthorized, "Invalid login");
+                throw new API_Exception(HttpStatusCode.BadRequest, "Invalid login");
             }
 
 
@@ -181,7 +181,7 @@ namespace WebApp.Facades
                     }
 
 
-                    throw new API_Exception(HttpStatusCode.Unauthorized, captcha_image);
+                    throw new API_Exception(HttpStatusCode.BadRequest, captcha_image);
                 }
             }
 
