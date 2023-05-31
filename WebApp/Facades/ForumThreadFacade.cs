@@ -64,7 +64,7 @@ namespace WebApp.Facades
             }
         }
 
-        internal static ForumThread? Get(long id)
+        internal static async Task<ForumThread?> Get(long id)
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
@@ -90,7 +90,7 @@ namespace WebApp.Facades
                     throw new API_Exception(HttpStatusCode.NotFound, "");
                 }
 
-                User author = UserFacade.Get(userId);
+                User? author = await UserFacade.Get(userId);
                 ForumThread forumThread = new ForumThread
                 {
                     Id = id,
@@ -103,7 +103,7 @@ namespace WebApp.Facades
             }
         }
 
-        internal static List<ForumThreadDTO> GetAll()
+        internal static async Task<List<ForumThreadDTO>> GetAll()
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
@@ -122,7 +122,7 @@ namespace WebApp.Facades
                     string title = reader["title"].ToString();
                     string content = reader["content"].ToString();
                     long userId = (long)reader["user_Id"];
-                    var user = UserFacade.Get(userId);
+                    User? user = await UserFacade.Get(userId);
                     var thread = new ForumThread()
                     {
                         Id = id,

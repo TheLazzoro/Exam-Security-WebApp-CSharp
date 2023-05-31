@@ -11,6 +11,7 @@ using WebApp.Model;
 using WebApp.Database;
 using WebApp.Utility;
 using System.Transactions;
+using SixLabors.ImageSharp;
 
 namespace WebApp.Facades
 {
@@ -53,7 +54,7 @@ namespace WebApp.Facades
 
                 try
                 {
-                    Role role_user = GetRoleByName("user");
+                    Role role_user = await GetRoleByName("user");
                     User user = new User(dto.Username, dto.Password, role_user);
 
                     // Prepared statement query
@@ -92,7 +93,7 @@ namespace WebApp.Facades
             }
         }
 
-        internal static User? Get(string username)
+        internal static async Task<User?> Get(string username)
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
@@ -102,12 +103,12 @@ namespace WebApp.Facades
 
                 command.CommandText = "select * from db_user where username = @username";
                 command.Parameters.AddWithValue("@username", username);
-                command.Prepare();
+                await command.PrepareAsync();
 
                 long id = 0;
                 string? password = null;
                 long? roleId = null;
-                MySqlDataReader reader = command.ExecuteReader();
+                MySqlDataReader reader = await command.ExecuteReaderAsync();
                 if (reader.Read())
                 {
                     id = (long)reader["id"];
@@ -118,7 +119,7 @@ namespace WebApp.Facades
                 if (id == 0)
                     return null;
 
-                Role role_user = GetRoleById(roleId);
+                Role role_user = await GetRoleById(roleId);
                 User user = new User()
                 {
                     Id = id,
@@ -131,7 +132,7 @@ namespace WebApp.Facades
             }
         }
 
-        internal static User? Get(long id)
+        internal static async Task<User?> Get(long id)
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
@@ -141,12 +142,12 @@ namespace WebApp.Facades
 
                 command.CommandText = "select * from db_user where id = @id";
                 command.Parameters.AddWithValue("@id", id);
-                command.Prepare();
+                await command.PrepareAsync();
 
                 string? username = null;
                 string? password = null;
                 long? roleId = null;
-                MySqlDataReader reader = command.ExecuteReader();
+                MySqlDataReader reader = await command.ExecuteReaderAsync();
                 if (reader.Read())
                 {
                     username = reader["username"].ToString();
@@ -157,7 +158,7 @@ namespace WebApp.Facades
                 if (username == null)
                     return null;
 
-                Role role = GetRoleById(roleId);
+                Role role = await GetRoleById(roleId);
                 User user = new User()
                 {
                     Id = id,
@@ -170,7 +171,7 @@ namespace WebApp.Facades
             }
         }
 
-        internal static Role? GetRoleById(long? id)
+        internal static async Task<Role?> GetRoleById(long? id)
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
@@ -180,10 +181,10 @@ namespace WebApp.Facades
 
                 command.CommandText = "select * from db_role where id = @id";
                 command.Parameters.AddWithValue("@id", id);
-                command.Prepare();
+                await command.PrepareAsync();
 
                 Role? role = null;
-                MySqlDataReader reader = command.ExecuteReader();
+                MySqlDataReader reader = await command.ExecuteReaderAsync();
                 if(reader.Read())
                 {
                     string rolename = reader["rolename"].ToString();
@@ -198,7 +199,7 @@ namespace WebApp.Facades
             }
         }
 
-        internal static Role? GetRoleByName(string name)
+        internal static async Task<Role?> GetRoleByName(string name)
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
@@ -208,10 +209,10 @@ namespace WebApp.Facades
 
                 command.CommandText = "select * from db_role where rolename = @name";
                 command.Parameters.AddWithValue("@name", name);
-                command.Prepare();
+                await command.PrepareAsync();
 
                 Role? role = null;
-                MySqlDataReader reader = command.ExecuteReader();
+                MySqlDataReader reader = await command.ExecuteReaderAsync();
                 if (reader.Read())
                 {
                     long id = (long)reader["id"];
@@ -226,13 +227,29 @@ namespace WebApp.Facades
             }
         }
 
-        internal static async Task UploadImage(byte[] file, HttpContext context)
+        internal static async Task UploadImage(IFormFile file, HttpContext context)
         {
+            string filename = file.FileName;
+            if(!filename.EndsWith(".jpg") && !filename.EndsWith(".png")) {
+                throw new API_Exception(HttpStatusCode.BadRequest, "Invalid file type.");
+            }
+
+            byte[] buffer = new byte[file.Length];
+            using (MemoryStream ms = new MemoryStream())
+            {
+                int read;
+                Stream s = file.OpenReadStream();
+                while ((read = s.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    ms.Write(buffer, 0, read);
+                }
+            }
+
             bool isJpeg;
             bool isPng;
 
             // Analyse file
-            using (Stream s = new MemoryStream(file))
+            using (Stream s = new MemoryStream(buffer))
             {
                 BinaryReader reader = new BinaryReader(s);
 
@@ -253,6 +270,10 @@ namespace WebApp.Facades
                     throw new API_Exception(HttpStatusCode.BadRequest, "Invalid file type.");
                 }
             }
+
+            // Extra check that parses the file content.
+            // Throws exception if content is invalid.
+            Image img = Image.Load(buffer);
 
             // File is valid/safe, we can continue.
 
@@ -331,7 +352,7 @@ namespace WebApp.Facades
                     // Write new image
                     using (FileStream fileStream = File.Create(fullNewPath))
                     {
-                        var s = new MemoryStream(file);
+                        var s = new MemoryStream(buffer);
                         s.CopyTo(fileStream);
                     }
 

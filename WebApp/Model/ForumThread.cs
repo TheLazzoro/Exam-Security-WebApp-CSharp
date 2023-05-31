@@ -7,7 +7,7 @@ namespace WebApp.Model
         public long? Id { get; set; }
         public string Title { get; set; }
         public string Content { get; set; }
-        public User Author { get; set; }
+        public User? Author { get; set; }
 
         /// <summary>
         /// Should only be used when fetching from database.

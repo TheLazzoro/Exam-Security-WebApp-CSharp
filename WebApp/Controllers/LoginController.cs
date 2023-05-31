@@ -53,7 +53,7 @@ namespace WebApp.Controllers
         {
             var username = userLogin.Username;
             var password = userLogin.Password;
-            var user = UserFacade.Get(username);
+            var user = await UserFacade.Get(username);
 
             if (user == null)
             {
