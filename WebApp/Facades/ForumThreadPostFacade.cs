@@ -53,7 +53,7 @@ namespace WebApp.Facades
             }
         }
 
-        internal static ForumThreadPost? Get(long id)
+        internal static async Task<ForumThreadPost?> Get(long id)
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
@@ -63,12 +63,12 @@ namespace WebApp.Facades
 
                 command.CommandText = "select * from db_forum_thread_post where id = @id";
                 command.Parameters.AddWithValue("@id", id);
-                command.Prepare();
+                await command.PrepareAsync();
 
                 string? content = null;
                 long userId = 0;
                 long threadId = 0;
-                MySqlDataReader reader = command.ExecuteReader();
+                MySqlDataReader reader = await command.ExecuteReaderAsync();
                 if (reader.Read())
                 {
                     content = reader["content"].ToString();
@@ -80,8 +80,8 @@ namespace WebApp.Facades
                     throw new API_Exception(HttpStatusCode.NotFound, "Forum thread post does not exist.");
                 }
 
-                User author = UserFacade.Get(userId);
-                ForumThread thread = ForumThreadFacade.Get(threadId);
+                User? author = await UserFacade.Get(userId);
+                ForumThread? thread = await ForumThreadFacade.Get(threadId);
                 ForumThreadPost forumThreadPost = new ForumThreadPost
                 {
                     Id = id,
@@ -94,7 +94,7 @@ namespace WebApp.Facades
             }
         }
 
-        internal static List<ForumThreadPostDTO>? GetByThreadId(long id)
+        internal static async Task<List<ForumThreadPostDTO>?> GetByThreadId(long id)
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
@@ -119,8 +119,8 @@ namespace WebApp.Facades
                     userId = (long)reader["user_Id"];
                     threadId = (long)reader["forum_thread_Id"];
 
-                    User author = UserFacade.Get(userId);
-                    ForumThread thread = ForumThreadFacade.Get(threadId);
+                    User? author = await UserFacade.Get(userId);
+                    ForumThread? thread = await ForumThreadFacade.Get(threadId);
                     ForumThreadPost forumThreadPost = new ForumThreadPost
                     {
                         Id = postId,
@@ -139,7 +139,7 @@ namespace WebApp.Facades
 
         internal static async Task Delete(User user, long id)
         {
-            ForumThreadPost post = Get(id);
+            ForumThreadPost? post = await Get(id);
             if (post.Author.Id != user.Id)
             {
                 throw new API_Exception(HttpStatusCode.Unauthorized, "Cannot delete another user's post.");

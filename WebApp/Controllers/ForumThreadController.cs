@@ -24,17 +24,18 @@ namespace WebApp.Controllers
         }
 
         [HttpGet("{id}")]
-        public IActionResult Get(long id)
+        public async Task<IActionResult> Get(long id)
         {
-            var forumThread = ForumThreadFacade.Get(id);
+            ForumThread? forumThread = await ForumThreadFacade.Get(id);
             var dto = new ForumThreadDTO(forumThread);
             return Ok(dto);
         }
 
         [HttpGet]
-        public IEnumerable<ForumThreadDTO> GetAll()
+        public async Task<IEnumerable<ForumThreadDTO>> GetAll()
         {
-            return ForumThreadFacade.GetAll().ToArray();
+            var forumThreads = await ForumThreadFacade.GetAll();
+            return forumThreads.ToArray();
         }
     }
 }

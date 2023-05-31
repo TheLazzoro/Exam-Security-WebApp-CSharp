@@ -21,7 +21,7 @@ namespace WebApp.DTOS
             this.Author = Author;
         }
 
-        public ForumThreadDTO(ForumThread forumThread)
+        public ForumThreadDTO(ForumThread? forumThread)
         {
             this.Id = forumThread.Id;
             this.Title = forumThread.Title;

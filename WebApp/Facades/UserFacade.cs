@@ -11,6 +11,7 @@ using WebApp.Model;
 using WebApp.Database;
 using WebApp.Utility;
 using System.Transactions;
+using SixLabors.ImageSharp;
 
 namespace WebApp.Facades
 {
@@ -231,13 +232,29 @@ namespace WebApp.Facades
             }
         }
 
-        internal static async Task UploadImage(byte[] file, HttpContext context)
+        internal static async Task UploadImage(IFormFile file, HttpContext context)
         {
+            string filename = file.FileName;
+            if(!filename.EndsWith(".jpg") && !filename.EndsWith(".png")) {
+                throw new API_Exception(HttpStatusCode.BadRequest, "Invalid file type.");
+            }
+
+            byte[] buffer = new byte[file.Length];
+            using (MemoryStream ms = new MemoryStream())
+            {
+                int read;
+                Stream s = file.OpenReadStream();
+                while ((read = s.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    ms.Write(buffer, 0, read);
+                }
+            }
+
             bool isJpeg;
             bool isPng;
 
             // Analyse file
-            using (Stream s = new MemoryStream(file))
+            using (Stream s = new MemoryStream(buffer))
             {
                 BinaryReader reader = new BinaryReader(s);
 
@@ -258,6 +275,10 @@ namespace WebApp.Facades
                     throw new API_Exception(HttpStatusCode.BadRequest, "Invalid file type.");
                 }
             }
+
+            // Extra check that parses the file content.
+            // Throws exception if content is invalid.
+            Image img = Image.Load(buffer);
 
             // File is valid/safe, we can continue.
 
@@ -336,7 +357,7 @@ namespace WebApp.Facades
                     // Write new image
                     using (FileStream fileStream = File.Create(fullNewPath))
                     {
-                        var s = new MemoryStream(file);
+                        var s = new MemoryStream(buffer);
                         s.CopyTo(fileStream);
                     }
 

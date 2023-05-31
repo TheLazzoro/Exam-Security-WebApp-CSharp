@@ -105,7 +105,7 @@ namespace WebApp.Utility
         /// returns a new, fresh token.
         /// Otherwise, returns null.
         /// </summary>
-        public static string? RefreshAccessToken(string tokenStr)
+        public static async Task<string?> RefreshAccessToken(string tokenStr)
         {
             if (string.IsNullOrEmpty(tokenStr))
             {
@@ -119,7 +119,7 @@ namespace WebApp.Utility
                 return null;
             }
 
-            User user = UserFacade.Get(userId);
+            User user = await UserFacade.Get(userId);
             if (user == null)
             {
                 return null;

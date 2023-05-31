@@ -24,17 +24,18 @@ namespace WebApp.Controllers
         }
 
         [HttpGet("{id}")]
-        public IActionResult Get(long id)
+        public async Task<IActionResult> Get(long id)
         {
-            var forumThreadPost = ForumThreadPostFacade.Get(id);
+            var forumThreadPost = await ForumThreadPostFacade.Get(id);
             var dto = new ForumThreadPostDTO(forumThreadPost);
             return Ok(dto);
         }
 
         [HttpGet("Thread/{id}")]
-        public IEnumerable<ForumThreadPostDTO> GetByThreadId(long id)
+        public async Task<IEnumerable<ForumThreadPostDTO>> GetByThreadId(long id)
         {
-            return ForumThreadPostFacade.GetByThreadId(id).ToArray();
+            var threadPosts = await ForumThreadPostFacade.GetByThreadId(id); 
+            return threadPosts.ToArray();
         }
 
         [HttpDelete("{id}")]

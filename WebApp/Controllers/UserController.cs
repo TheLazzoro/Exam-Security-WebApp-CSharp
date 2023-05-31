@@ -25,9 +25,9 @@ namespace WebApp.Controllers
         }
 
         [HttpGet("{id}")]
-        public UserSafeDTO Get(long id)
+        public async Task<UserSafeDTO> Get(long id)
         {
-            var user = UserFacade.Get(id);
+            User user = await UserFacade.Get(id);
             return new UserSafeDTO(user);
         }
 
@@ -58,17 +58,7 @@ namespace WebApp.Controllers
                 return BadRequest("Only images are supported.");
             }
 
-            byte[] buffer = new byte[file.Length];
-            using (MemoryStream ms = new MemoryStream())
-            {
-                int read;
-                Stream s = file.OpenReadStream();
-                while ((read = s.Read(buffer, 0, buffer.Length)) > 0)
-                {
-                    ms.Write(buffer, 0, read);
-                }
-            }
-            await UserFacade.UploadImage(buffer, HttpContext);
+            await UserFacade.UploadImage(file, HttpContext);
             var msg = new ResponseDTO()
             {
                 Message = "Uploaded image.",
@@ -94,7 +84,7 @@ namespace WebApp.Controllers
         [HttpGet("Image-Get-By-Username/{username}")]
         public async Task<IActionResult> GetUserImage(string username)
         {
-            var user = UserFacade.Get(username);
+            User user = await UserFacade.Get(username);
             if(user == null)
             {
                 throw new API_Exception(HttpStatusCode.NotFound, $"User '{username}' was not found.");
