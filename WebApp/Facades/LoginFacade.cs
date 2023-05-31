@@ -105,21 +105,22 @@ namespace WebApp.Facades
                 await cmd_GetCaptcha.PrepareAsync();
 
                 MySqlDataReader reader_captcha = await cmd_GetCaptcha.ExecuteReaderAsync();
+                bool isCaptchaVerified = true;
                 if (reader_captcha.Read())
                 {
-                    string? captcha = reader["captcha"].ToString();
-                    if (captcha != userDTO.captcha)
+                    string captcha = reader_captcha["captcha"].ToString();
+                    if (captcha != userDTO.captcha && loginAttempts > MAX_ATTEMPTS)
                     {
-                        throw new API_Exception(HttpStatusCode.Unauthorized, "Invalid login");
+                        isCaptchaVerified = false;
                     }
                 }
+                await reader_captcha.CloseAsync();
 
                 // --- Actually verify password and login --- //
 
-                if (user.VerifyPassword(userDTO.Password))
+                if (user.VerifyPassword(userDTO.Password) && isCaptchaVerified)
                 {
                     // Reset login attempts
-                    await connection.OpenAsync();
                     MySqlCommand cmd_login = new MySqlCommand();
                     MySqlTransaction transaction = await connection.BeginTransactionAsync();
                     cmd_login.Connection = connection;
@@ -147,10 +148,6 @@ namespace WebApp.Facades
 
                 if (loginAttempts > MAX_ATTEMPTS)
                 {
-                    if (!string.IsNullOrEmpty(userDTO.captcha))
-                    {
-
-                    }
 
                     var slc = new SixLaborsCaptchaModule(new SixLaborsCaptchaOptions
                     {
