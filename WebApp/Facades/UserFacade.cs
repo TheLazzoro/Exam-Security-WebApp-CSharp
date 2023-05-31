@@ -51,7 +51,7 @@ namespace WebApp.Facades
                 command.Connection = connection;
                 command.Transaction = transaction;
 
-                var found = Get(dto.Username);
+                User? found = await Get(dto.Username);
                 if (found != null)
                 {
                     throw new API_Exception(HttpStatusCode.Conflict, "Username was already taken.");

@@ -29,6 +29,30 @@ namespace WebApp.Facades
 
             if (user.VerifyPassword(userDTO.Password))
             {
+                // Reset login attempts
+                using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
+                {
+                    await connection.OpenAsync();
+                    MySqlCommand command = new MySqlCommand();
+                    MySqlTransaction transaction = await connection.BeginTransactionAsync();
+                    command.Connection = connection;
+                    command.Transaction = transaction;
+
+                    command.CommandText = "update db_login_attempts set attempts = @attempts where username = @username";
+                    command.Parameters.AddWithValue("@username", user.Username);
+                    command.Parameters.AddWithValue("@attempts", 0);
+                    try
+                    {
+                        await command.PrepareAsync();
+                        await command.ExecuteNonQueryAsync();
+                        await transaction.CommitAsync();
+                    }
+                    catch (Exception)
+                    {
+                        await transaction.RollbackAsync();
+                    }
+                }
+
                 return user;
             }
 
@@ -36,7 +60,7 @@ namespace WebApp.Facades
 
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
-                connection.Open();
+                await connection.OpenAsync();
                 MySqlCommand command = new MySqlCommand();
                 command.Connection = connection;
 
@@ -50,9 +74,11 @@ namespace WebApp.Facades
                 {
                     attempts = (int)reader["attempts"];
                     attempts++;
+                    await reader.DisposeAsync(); // Need to close current reader before a new transaction.
 
                     MySqlCommand cmdIncrement = new MySqlCommand();
                     MySqlTransaction transaction = await connection.BeginTransactionAsync();
+                    cmdIncrement.Connection = connection;
                     cmdIncrement.Transaction = transaction;
                     cmdIncrement.CommandText = "update db_login_attempts set attempts = @attempts where username = @username";
                     cmdIncrement.Parameters.AddWithValue("@attempts", attempts);
@@ -71,35 +97,39 @@ namespace WebApp.Facades
                     if (attempts > MAX_ATTEMPTS)
                     {
                         Random rand = new Random();
-                        StringBuilder sr = new StringBuilder();
+                        StringBuilder sb = new StringBuilder();
                         for (int i = 0; i < CAPTCHA_LENGTH; i++)
                         {
                             char c = CAPTCHA_STR[rand.Next(CAPTCHA_STR.Length)];
-                            sr.Append(c);
+                            sb.Append(c);
                         }
 
-                        string captcha = sr.ToString();
-                        MemoryStream stream = CaptchaGen.NetCore.ImageFactory.BuildImage(captcha, 64, 256, 30, 10);
-                        var fileStream = File.Create("C:/Users/Lasse Dam/Desktop/image.jpg");
-                        stream.Seek(0, SeekOrigin.Begin);
-                        stream.CopyTo(fileStream);
-                        fileStream.Close();
+                        string captcha = sb.ToString();
+                        using (MemoryStream stream = CaptchaGen.NetCore.ImageFactory.BuildImage(captcha, 64, 256, 30, 10))
+                        {
+                            byte[] buffer = stream.ToArray();
+                            string captcha_image = System.Convert.ToBase64String(buffer);
+
+                            throw new API_Exception(HttpStatusCode.Unauthorized, captcha_image);
+                        }
                     }
-                    
+
                 }
                 else // if user has not logged in even once.
                 {
+                    await reader.CloseAsync(); // Need to close current reader before a new transaction.
                     MySqlCommand commandInsert = new MySqlCommand();
                     MySqlTransaction transaction = await connection.BeginTransactionAsync();
+                    commandInsert.Connection = connection;
                     commandInsert.Transaction = transaction;
-                    command.CommandText = "insert into db_login_attempts (user_Id, username, attempts) values (@user_Id, @username, @attempts)";
-                    command.Parameters.AddWithValue("@user_Id", user.Id);
-                    command.Parameters.AddWithValue("@username", user.Username);
-                    command.Parameters.AddWithValue("@attempts", 1);
+                    commandInsert.CommandText = "insert into db_login_attempts (user_Id, username, attempts) values (@user_Id, @username, @attempts)";
+                    commandInsert.Parameters.AddWithValue("@user_Id", user.Id);
+                    commandInsert.Parameters.AddWithValue("@username", user.Username);
+                    commandInsert.Parameters.AddWithValue("@attempts", 1);
                     try
                     {
-                        await command.PrepareAsync();
-                        await command.ExecuteNonQueryAsync();
+                        await commandInsert.PrepareAsync();
+                        await commandInsert.ExecuteNonQueryAsync();
                         await transaction.CommitAsync();
                     }
                     catch (Exception)
@@ -107,9 +137,9 @@ namespace WebApp.Facades
                         await transaction.RollbackAsync();
                     }
                 }
-
-                return null;
             }
+
+            return null;
         }
     }
 }

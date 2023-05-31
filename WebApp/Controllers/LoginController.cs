@@ -31,7 +31,7 @@ namespace WebApp.Controllers
         [HttpPost]
         public async Task<IActionResult> Login([FromBody] UserDTO userLogin)
         {
-            Thread.Sleep(2000);
+            Thread.Sleep(500);
 
             var user = await Authenticate(userLogin);
             if (user == null)
@@ -51,7 +51,7 @@ namespace WebApp.Controllers
 
         private async Task<User> Authenticate(UserDTO userDTO)
         {
-            User user = await LoginFacade.VerifyLogin(userDTO); // TODO: !=!=!==!=!=!!!!!!
+            User user = await LoginFacade.VerifyLogin(userDTO);
             return user;
         }
     }
