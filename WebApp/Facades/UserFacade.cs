@@ -40,26 +40,26 @@ namespace WebApp.Facades
                 throw new API_Exception(HttpStatusCode.BadRequest, "Password must contain at least one letter, one lower/upper case letter, and a number.");
             }
 
+            User? found = await Get(dto.Username);
+            if (found != null)
+            {
+                throw new API_Exception(HttpStatusCode.Conflict, "Username was already taken.");
+            }
+
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
-                connection.Open();
+                await connection.OpenAsync();
                 MySqlCommand command = connection.CreateCommand();
-                MySqlTransaction transaction = connection.BeginTransaction();
+                MySqlTransaction transaction = await connection.BeginTransactionAsync();
 
                 // Must assign both transaction object and connection
                 // to Command object for a pending local transaction
                 command.Connection = connection;
                 command.Transaction = transaction;
 
-                User? found = await Get(dto.Username);
-                if (found != null)
-                {
-                    throw new API_Exception(HttpStatusCode.Conflict, "Username was already taken.");
-                }
-
                 try
                 {
-                    Role role_user = await GetRoleByName("user");
+                    Role? role_user = await GetRoleByName("user");
                     User user = new User(dto.Username, dto.Password, role_user);
 
                     // Prepared statement query

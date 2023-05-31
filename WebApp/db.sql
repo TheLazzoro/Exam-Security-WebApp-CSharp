@@ -13,7 +13,8 @@ create table db_user (
 create table db_login_attempts (
 	user_id bigint NOT NULL REFERENCES db_user(id),
     username varchar(255) NOT NULL REFERENCES db_user(username),
-    attempts int
+    attempts int,
+    captcha varchar(255)
 );
 
 create table db_role (
