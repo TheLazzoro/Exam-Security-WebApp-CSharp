@@ -13,8 +13,12 @@ namespace WebApp.Facades
     public static class LoginFacade
     {
         private static int MAX_ATTEMPTS = 3;
-        private static readonly string CAPTCHA_STR = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         private static readonly int CAPTCHA_LENGTH = 6;
+#if _WINDOWS
+        private static readonly string CAPTCHA_FONT = "Verdana";
+#else
+        private static readonly string CAPTCHA_FONT = "Lato";
+#endif
 
         /// <summary>
         /// Returns null if user login was invalid
@@ -97,19 +101,11 @@ namespace WebApp.Facades
 
                     if (attempts > MAX_ATTEMPTS)
                     {
-                        Random rand = new Random();
-                        StringBuilder sb = new StringBuilder();
-                        for (int i = 0; i < CAPTCHA_LENGTH; i++)
-                        {
-                            char c = CAPTCHA_STR[rand.Next(CAPTCHA_STR.Length)];
-                            sb.Append(c);
-                        }
-
-                        string captcha = sb.ToString();
                         var slc = new SixLaborsCaptchaModule(new SixLaborsCaptchaOptions
                         {
                             DrawLines = 7,
                             TextColor = new Color[] { Color.Blue, Color.Black },
+                            FontFamilies = new string[] { CAPTCHA_FONT },
                         });
 
                         var key = Extensions.GetUniqueKey(CAPTCHA_LENGTH);
@@ -117,16 +113,6 @@ namespace WebApp.Facades
                         string captcha_image = System.Convert.ToBase64String(buffer);
 
                         throw new API_Exception(HttpStatusCode.Unauthorized, captcha_image);
-
-                        /*
-                        using (MemoryStream stream = CaptchaGen.NetCore.ImageFactory.BuildImage(captcha, 64, 256, 30, 10))
-                        {
-                            byte[] buffer = stream.ToArray();
-                            string captcha_image = System.Convert.ToBase64String(buffer);
-
-                            throw new API_Exception(HttpStatusCode.Unauthorized, captcha_image);
-                        }
-                         */
                     }
 
                 }
