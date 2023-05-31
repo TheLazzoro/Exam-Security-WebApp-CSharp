@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.StaticFiles;
 using MySqlConnector;
+using SixLaborsCaptcha.Core;
 using System.Net;
 using System.Text;
 using WebApp.Database;
@@ -105,6 +106,19 @@ namespace WebApp.Facades
                         }
 
                         string captcha = sb.ToString();
+                        var slc = new SixLaborsCaptchaModule(new SixLaborsCaptchaOptions
+                        {
+                            DrawLines = 7,
+                            TextColor = new Color[] { Color.Blue, Color.Black },
+                        });
+
+                        var key = Extensions.GetUniqueKey(CAPTCHA_LENGTH);
+                        byte[] buffer = slc.Generate(key);
+                        string captcha_image = System.Convert.ToBase64String(buffer);
+
+                        throw new API_Exception(HttpStatusCode.Unauthorized, captcha_image);
+
+                        /*
                         using (MemoryStream stream = CaptchaGen.NetCore.ImageFactory.BuildImage(captcha, 64, 256, 30, 10))
                         {
                             byte[] buffer = stream.ToArray();
@@ -112,6 +126,7 @@ namespace WebApp.Facades
 
                             throw new API_Exception(HttpStatusCode.Unauthorized, captcha_image);
                         }
+                         */
                     }
 
                 }
