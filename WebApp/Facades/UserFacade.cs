@@ -30,8 +30,13 @@ namespace WebApp.Facades
             if(password.Length < 8) {
                 throw new API_Exception(HttpStatusCode.BadRequest, "Password is too short.");
             }
-            if(!password.Any(char.IsDigit) || !password.Any(char.IsLetter) || !password.Any(char.IsSymbol)) {
-                throw new API_Exception(HttpStatusCode.BadRequest, "Password must contain at least one letter, number and symbol.");
+            if(
+                !password.Any(char.IsDigit)
+                || !password.Any(char.IsLetter)
+                || !password.Any(char.IsLower)
+                || !password.Any(char.IsUpper)
+                ) {
+                throw new API_Exception(HttpStatusCode.BadRequest, "Password must contain at least one letter, one lower/upper case letter, and a number.");
             }
 
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
@@ -53,7 +58,7 @@ namespace WebApp.Facades
 
                 try
                 {
-                    Role role_user = GetRoleByName("user");
+                    Role role_user = await GetRoleByName("user");
                     User user = new User(dto.Username, dto.Password, role_user);
 
                     // Prepared statement query
@@ -92,7 +97,7 @@ namespace WebApp.Facades
             }
         }
 
-        internal static User? Get(string username)
+        internal static async Task<User?> Get(string username)
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
@@ -102,12 +107,12 @@ namespace WebApp.Facades
 
                 command.CommandText = "select * from db_user where username = @username";
                 command.Parameters.AddWithValue("@username", username);
-                command.Prepare();
+                await command.PrepareAsync();
 
                 long id = 0;
                 string? password = null;
                 long? roleId = null;
-                MySqlDataReader reader = command.ExecuteReader();
+                MySqlDataReader reader = await command.ExecuteReaderAsync();
                 if (reader.Read())
                 {
                     id = (long)reader["id"];
@@ -118,7 +123,7 @@ namespace WebApp.Facades
                 if (id == 0)
                     return null;
 
-                Role role_user = GetRoleById(roleId);
+                Role role_user = await GetRoleById(roleId);
                 User user = new User()
                 {
                     Id = id,
@@ -131,7 +136,7 @@ namespace WebApp.Facades
             }
         }
 
-        internal static User? Get(long id)
+        internal static async Task<User?> Get(long id)
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
@@ -141,12 +146,12 @@ namespace WebApp.Facades
 
                 command.CommandText = "select * from db_user where id = @id";
                 command.Parameters.AddWithValue("@id", id);
-                command.Prepare();
+                await command.PrepareAsync();
 
                 string? username = null;
                 string? password = null;
                 long? roleId = null;
-                MySqlDataReader reader = command.ExecuteReader();
+                MySqlDataReader reader = await command.ExecuteReaderAsync();
                 if (reader.Read())
                 {
                     username = reader["username"].ToString();
@@ -157,7 +162,7 @@ namespace WebApp.Facades
                 if (username == null)
                     return null;
 
-                Role role = GetRoleById(roleId);
+                Role? role = await GetRoleById(roleId);
                 User user = new User()
                 {
                     Id = id,
@@ -170,7 +175,7 @@ namespace WebApp.Facades
             }
         }
 
-        internal static Role? GetRoleById(long? id)
+        internal static async Task<Role?> GetRoleById(long? id)
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
@@ -180,10 +185,10 @@ namespace WebApp.Facades
 
                 command.CommandText = "select * from db_role where id = @id";
                 command.Parameters.AddWithValue("@id", id);
-                command.Prepare();
+                await command.PrepareAsync();
 
                 Role? role = null;
-                MySqlDataReader reader = command.ExecuteReader();
+                MySqlDataReader reader = await command.ExecuteReaderAsync();
                 if(reader.Read())
                 {
                     string rolename = reader["rolename"].ToString();
@@ -198,7 +203,7 @@ namespace WebApp.Facades
             }
         }
 
-        internal static Role? GetRoleByName(string name)
+        internal static async Task<Role?> GetRoleByName(string name)
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
@@ -208,10 +213,10 @@ namespace WebApp.Facades
 
                 command.CommandText = "select * from db_role where rolename = @name";
                 command.Parameters.AddWithValue("@name", name);
-                command.Prepare();
+                await command.PrepareAsync();
 
                 Role? role = null;
-                MySqlDataReader reader = command.ExecuteReader();
+                MySqlDataReader reader = await command.ExecuteReaderAsync();
                 if (reader.Read())
                 {
                     long id = (long)reader["id"];

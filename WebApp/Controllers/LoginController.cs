@@ -49,25 +49,10 @@ namespace WebApp.Controllers
 
         
 
-        private async Task<User> Authenticate(UserDTO userLogin)
+        private async Task<User> Authenticate(UserDTO userDTO)
         {
-            var username = userLogin.Username;
-            var password = userLogin.Password;
-            var user = UserFacade.Get(username);
-
-            if (user == null)
-            {
-                throw new API_Exception(HttpStatusCode.NotFound, "Login failed.");
-            }
-
-            if (user.VerifyPassword(password))
-            {
-                return user;
-            }
-            else
-            {
-                return null;
-            }
+            User user = await LoginFacade.VerifyLogin(userDTO); // TODO: !=!=!==!=!=!!!!!!
+            return user;
         }
     }
 }
