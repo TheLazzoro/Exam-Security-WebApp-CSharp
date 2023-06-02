@@ -44,6 +44,12 @@ namespace WebApp.Facades
             if (timeout > DateTime.Now)
             {
                 await Task.Delay(LOGIN_DELAY);
+                
+                // Refresh timeout
+                timeout = DateTime.Now.AddMinutes(TIMEOUT_MINUTES);
+                login_timeouts.Remove(IP, out tmp_date);
+                login_timeouts.TryAdd(IP, timeout);
+
                 throw new API_Exception(HttpStatusCode.BadRequest, "Invalid login");
             }
             else
