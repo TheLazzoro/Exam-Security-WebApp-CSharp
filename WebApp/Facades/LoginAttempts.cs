@@ -12,9 +12,12 @@ namespace WebApp.Facades
 
         private static int MAX_ATTEMPTS = 10;
         private static int TIMEOUT_MINUTES = 1;
+        private static int LOGIN_DELAY = 1000 * 20; // 20 seconds
         
-        public static async Task OnLoginAttempt(IPAddress IP)
+        public static async Task OnLoginAttempt(HttpContext context)
         {
+            var IP = context.Connection.RemoteIpAddress;
+
             int attempts;
             loginAttempts.TryGetValue(IP, out attempts);
             attempts++;
@@ -36,7 +39,7 @@ namespace WebApp.Facades
 
             if (timeout > DateTime.Now)
             {
-                await Task.Delay(5000);
+                await Task.Delay(LOGIN_DELAY);
                 throw new API_Exception(HttpStatusCode.BadRequest, "Invalid login");
             }
             else
@@ -46,8 +49,10 @@ namespace WebApp.Facades
             }
         }
 
-        public static void OnSuccessfulLogin(IPAddress IP)
+        public static void OnSuccessfulLogin(HttpContext context)
         {
+            var IP = context.Connection.RemoteIpAddress;
+
             loginAttempts.Remove(IP);
             loginAttempts.Add(IP, 0);
         }

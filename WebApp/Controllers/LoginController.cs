@@ -35,15 +35,15 @@ namespace WebApp.Controllers
         {
             _logger.LogInformation($"Login attempt with username '{userDTO.Username}'.");
 
+            await LoginAttempts.OnLoginAttempt(HttpContext);
             await Task.Delay(1000);
-            await LoginAttempts.OnLoginAttempt(HttpContext.Connection.RemoteIpAddress);
 
             User? user = await LoginFacade.VerifyLogin(userDTO);
             if (user == null)
             {
                 return NotFound("Invalid login");
             }
-            LoginAttempts.OnSuccessfulLogin(HttpContext.Connection.RemoteIpAddress);
+            LoginAttempts.OnSuccessfulLogin(HttpContext);
 
 
             var token = Token.GenerateToken(user);
