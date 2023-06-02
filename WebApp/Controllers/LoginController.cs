@@ -31,17 +31,20 @@ namespace WebApp.Controllers
 
         [AllowAnonymous]
         [HttpPost]
-        public async Task<IActionResult> Login([FromBody] UserDTO userLogin)
+        public async Task<IActionResult> Login([FromBody] UserDTO userDTO)
         {
-            _logger.LogInformation($"Login attempt with username '{userLogin.Username}'.");
+            _logger.LogInformation($"Login attempt with username '{userDTO.Username}'.");
 
             await Task.Delay(1000);
+            await LoginAttempts.OnLoginAttempt(HttpContext.Connection.RemoteIpAddress);
 
-            var user = await Authenticate(userLogin);
+            User? user = await LoginFacade.VerifyLogin(userDTO);
             if (user == null)
             {
                 return NotFound("Invalid login");
             }
+            LoginAttempts.OnSuccessfulLogin(HttpContext.Connection.RemoteIpAddress);
+
 
             var token = Token.GenerateToken(user);
             JsonObject jsonToken = new JsonObject();
@@ -51,12 +54,5 @@ namespace WebApp.Controllers
             return Ok(jsonToken);
         }
 
-        
-
-        private async Task<User> Authenticate(UserDTO userDTO)
-        {
-            User user = await LoginFacade.VerifyLogin(userDTO);
-            return user;
-        }
     }
 }

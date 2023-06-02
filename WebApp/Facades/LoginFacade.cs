@@ -21,6 +21,8 @@ namespace WebApp.Facades
         private static readonly string CAPTCHA_FONT = "Lato";
 #endif
 
+            
+
         /// <summary>
         /// Returns null if user login was invalid
         /// </summary>
