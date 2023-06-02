@@ -42,16 +42,22 @@ namespace WebApp.Facades
                 MySqlCommand command = new MySqlCommand();
                 command.Connection = connection;
 
-                command.CommandText = "select attempts from db_login_attempts where username = @username";
+                command.CommandText = "select attempts, captcha from db_login_attempts where username = @username";
                 command.Parameters.AddWithValue("@username", userDTO.Username);
                 await command.PrepareAsync();
 
                 MySqlDataReader reader = await command.ExecuteReaderAsync();
                 int loginAttempts = 0;
+                bool isCaptchaVerified = true;
                 if (reader.Read()) // if attempt count has been stored once, retreive it.
                 {
                     loginAttempts = (int)reader["attempts"];
                     loginAttempts++;
+                    string captcha = reader["captcha"].ToString();
+                    if (captcha != userDTO.captcha && loginAttempts > MAX_ATTEMPTS)
+                    {
+                        isCaptchaVerified = false;
+                    }
                     await reader.DisposeAsync(); // Need to close current reader before a new transaction.
 
                     MySqlCommand cmdIncrement = new MySqlCommand();
@@ -95,26 +101,6 @@ namespace WebApp.Facades
                         await transaction.RollbackAsync();
                     }
                 }
-
-                // --- CAPTCHA CHECK --- //
-
-                MySqlCommand cmd_GetCaptcha = new MySqlCommand();
-                cmd_GetCaptcha.Connection = connection;
-                cmd_GetCaptcha.CommandText = "select captcha from db_login_attempts where username = @username";
-                cmd_GetCaptcha.Parameters.AddWithValue("@username", user.Username);
-                await cmd_GetCaptcha.PrepareAsync();
-
-                MySqlDataReader reader_captcha = await cmd_GetCaptcha.ExecuteReaderAsync();
-                bool isCaptchaVerified = true;
-                if (reader_captcha.Read())
-                {
-                    string captcha = reader_captcha["captcha"].ToString();
-                    if (captcha != userDTO.captcha && loginAttempts > MAX_ATTEMPTS)
-                    {
-                        isCaptchaVerified = false;
-                    }
-                }
-                await reader_captcha.CloseAsync();
 
                 // --- Actually verify password and login --- //
 

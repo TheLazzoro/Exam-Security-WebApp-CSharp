@@ -17,6 +17,10 @@ var configurationString_Startup = builder.Configuration.GetConnectionString("Sta
 SQLConnection.connectionString = configurationString;
 SQLConnection.connectionString_Startup = configurationString_Startup;
 
+// Logging
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+
 // Add services to the container.
 
 builder.Services.AddControllers();
