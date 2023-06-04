@@ -46,6 +46,7 @@ namespace WebApp.Facades
             if (!loginAttempts.TryGetValue(key, out loginAttempt))
             {
                 loginAttempt = new LoginAttempt(IP, username);
+                loginAttempts.TryAdd(key, loginAttempt);
             }
 
             loginAttempt.attempts++;
