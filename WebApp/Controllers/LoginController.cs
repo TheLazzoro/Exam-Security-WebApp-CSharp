@@ -33,9 +33,8 @@ namespace WebApp.Controllers
         [HttpPost]
         public async Task<IActionResult> Login([FromBody] UserDTO userDTO)
         {
-            _logger.LogInformation($"Login attempt with username '{userDTO.Username}'.");
 
-            await LoginAttempts.OnLoginAttempt(HttpContext);
+            await LoginAttempts.OnLoginAttempt(userDTO, HttpContext, _logger);
             await Task.Delay(1000);
 
             User? user = await LoginFacade.VerifyLogin(userDTO);

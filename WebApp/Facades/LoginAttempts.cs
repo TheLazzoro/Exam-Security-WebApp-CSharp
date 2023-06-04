@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Net;
 using System.Threading;
+using WebApp.DTOS;
 using WebApp.ErrorHandling;
 
 namespace WebApp.Facades
@@ -18,7 +19,7 @@ namespace WebApp.Facades
         private static int tmp_int;
         private static DateTime tmp_date;
 
-        public static async Task OnLoginAttempt(HttpContext context)
+        public static async Task OnLoginAttempt(UserDTO userDTO, HttpContext context, ILogger logger)
         {
             var IP = context.Connection.RemoteIpAddress;
 
@@ -43,6 +44,7 @@ namespace WebApp.Facades
 
             if (timeout > DateTime.Now)
             {
+                logger.LogWarning($"Failed login attempts from IP '{IP}' with username '{userDTO.Username}'. Attempts: {attempts}");
                 await Task.Delay(LOGIN_DELAY);
                 
                 // Refresh timeout
