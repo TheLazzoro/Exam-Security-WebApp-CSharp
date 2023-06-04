@@ -10,9 +10,12 @@ namespace WebApp.ErrorHandling
     public class Middleware
     {
         private readonly RequestDelegate _next;
-        public Middleware(RequestDelegate next)
+        private readonly ILogger _logger;
+
+        public Middleware(RequestDelegate next, ILogger<Middleware> logger)
         {
             _next = next;
+            _logger = logger;
         }
 
         /// <summary>
@@ -49,6 +52,8 @@ namespace WebApp.ErrorHandling
             }
             catch (Exception ex)
             {
+                _logger.LogCritical($"Uncaught exception: {ex.Message}");
+
                 context.Response.ContentType = "application/json";
                 context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
                 string message;

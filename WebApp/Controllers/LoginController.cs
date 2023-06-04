@@ -34,7 +34,7 @@ namespace WebApp.Controllers
         public async Task<IActionResult> Login([FromBody] UserDTO userDTO)
         {
 
-            await LoginAttempts.OnLoginAttempt(userDTO, HttpContext, _logger);
+            await LoginAttempt.OnAttempt(userDTO, HttpContext, _logger);
             await Task.Delay(1000);
 
             User? user = await LoginFacade.VerifyLogin(userDTO);
@@ -42,7 +42,7 @@ namespace WebApp.Controllers
             {
                 return NotFound("Invalid login");
             }
-            LoginAttempts.OnSuccessfulLogin(HttpContext);
+            LoginAttempt.OnSuccessfulLogin(userDTO, HttpContext);
 
 
             var token = Token.GenerateToken(user);
