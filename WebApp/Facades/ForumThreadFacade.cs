@@ -5,11 +5,15 @@ using WebApp.Database;
 using WebApp.DTOS;
 using WebApp.ErrorHandling;
 using WebApp.Model;
+using Ganss.Xss;
 
 namespace WebApp.Facades
 {
     internal static class ForumThreadFacade
     {
+        private static HtmlSanitizer sanitizer = new HtmlSanitizer();
+
+
         internal static void Create(ForumThread forumThread)
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
@@ -28,17 +32,20 @@ namespace WebApp.Facades
 
                 try
                 {
+                    string title_sanitized = sanitizer.Sanitize(forumThread.Title);
+                    string content_sanitized = sanitizer.Sanitize(forumThread.Content);
+
                     // Prepared statement query
                     command.CommandText = "Insert into db_forum_thread (title, content, user_id) VALUES (@title, @content, @userId)";
-                    command.Parameters.AddWithValue("@title", forumThread.Title);
-                    command.Parameters.AddWithValue("@content", forumThread.Content);
+                    command.Parameters.AddWithValue("@title", title_sanitized);
+                    command.Parameters.AddWithValue("@content", content_sanitized);
                     command.Parameters.AddWithValue("@userId", forumThread.Author.Id);
                     command.Prepare();
                     command.ExecuteNonQuery();
 
                     // Attempt to commit the transaction.
                     transaction.Commit();
-                    Console.WriteLine($"Created user forum thread '{forumThread.Title}'.");
+                    Console.WriteLine($"Created user forum thread '{title_sanitized}'.");
                 }
                 catch (Exception ex)
                 {

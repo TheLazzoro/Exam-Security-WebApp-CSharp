@@ -7,12 +7,12 @@ namespace WebApp.Facades
 {
     public class LoginAttempt
     {
-        public IPAddress IP { get; }
-        public string username { get; }
-        public int attempts { get; set; }
-        public DateTime timeout { get; set; }
-        public bool hasTimeout { get; set; }
-        public Timer timer;
+        private IPAddress IP { get; }
+        private string username { get; }
+        private int attempts { get; set; }
+        private DateTime timeout { get; set; }
+        private bool hasTimeout { get; set; }
+        private Timer timer;
 
 
         private static ConcurrentDictionary<Tuple<IPAddress, string>, LoginAttempt> loginAttempts = new();
@@ -24,7 +24,7 @@ namespace WebApp.Facades
         private static int tmp_int;
         private static DateTime tmp_date;
 
-        public LoginAttempt(IPAddress IP, string username)
+        private LoginAttempt(IPAddress IP, string username)
         {
             this.IP = IP;
             this.username = username;
@@ -32,7 +32,7 @@ namespace WebApp.Facades
             this.hasTimeout = false;
         }
 
-        public void TimerStart() {
+        private void TimerStart() {
             this.timer = new Timer(OnTimerFinish, this, TIMEOUT_MS, Timeout.Infinite);
         }
 
@@ -41,7 +41,6 @@ namespace WebApp.Facades
         /// </summary>
         private void OnTimerFinish(object stateinfo) {
             // Remove object from ConcurrentDictionary after 'TIMEOUT_MS' delay
-            Console.WriteLine("Finished timer");
             if(this.timeout < DateTime.Now) {
                 var key = new Tuple<IPAddress, string>(IP, username);
                 LoginAttempt loginAttempt;

@@ -5,12 +5,15 @@ using WebApp.Database;
 using WebApp.DTOS;
 using WebApp.ErrorHandling;
 using WebApp.Model;
+using Ganss.Xss;
 
 namespace WebApp.Facades
 {
     internal static class ForumThreadPostFacade
     {
-        internal static async Task Create(ForumThreadPost forumThreadPost)
+        private static HtmlSanitizer sanitizer = new HtmlSanitizer();
+
+        internal static void Create(ForumThreadPost forumThreadPost)
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
@@ -22,8 +25,10 @@ namespace WebApp.Facades
 
                 try
                 {
+                    string content_sanitized = sanitizer.Sanitize(forumThreadPost.Content);
+
                     command.CommandText = "Insert into db_forum_thread_post (content, user_id, forum_thread_Id) VALUES (@content, @userId, @forumThreadId)";
-                    command.Parameters.AddWithValue("@content", forumThreadPost.Content);
+                    command.Parameters.AddWithValue("@content", content_sanitized);
                     command.Parameters.AddWithValue("@userId", forumThreadPost.Author.Id);
                     command.Parameters.AddWithValue("@forumThreadId", forumThreadPost.ThreadId);
                     await command.PrepareAsync();
