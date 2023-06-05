@@ -13,12 +13,12 @@ namespace WebApp.Controllers
     {
         [HttpPost]
         [Authorize]
-        public IActionResult Create([FromBody] ForumThreadPostDTO dto)
+        public async Task<IActionResult> Create([FromBody] ForumThreadPostDTO dto)
         {
             var currentUser = Token.GetCurrentUser(HttpContext); // Get user from token rather than from the dto.
 
             ForumThreadPost forumThreadPost = new ForumThreadPost(dto.Content, currentUser, dto.ThreadId);
-            ForumThreadPostFacade.Create(forumThreadPost);
+            await ForumThreadPostFacade.Create(forumThreadPost);
 
             return Ok();
         }
@@ -36,6 +36,16 @@ namespace WebApp.Controllers
         {
             var threadPosts = await ForumThreadPostFacade.GetByThreadId(id); 
             return threadPosts.ToArray();
+        }
+
+        [HttpPut]
+        [Authorize]
+        public async Task<IActionResult> Edit([FromBody] ForumThreadPostDTO dto)
+        {
+            var user = Token.GetCurrentUser(HttpContext);
+            await ForumThreadPostFacade.Edit(user, dto);
+
+            return Ok();
         }
 
         [HttpDelete("{id}")]

@@ -10,11 +10,11 @@ namespace WebApp.Facades
 {
     internal static class ForumThreadPostFacade
     {
-        internal static void Create(ForumThreadPost forumThreadPost)
+        internal static async Task Create(ForumThreadPost forumThreadPost)
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
-                connection.Open();
+                await connection.OpenAsync();
                 MySqlCommand command = connection.CreateCommand();
                 MySqlTransaction transaction = connection.BeginTransaction();
                 command.Connection = connection;
@@ -26,10 +26,10 @@ namespace WebApp.Facades
                     command.Parameters.AddWithValue("@content", forumThreadPost.Content);
                     command.Parameters.AddWithValue("@userId", forumThreadPost.Author.Id);
                     command.Parameters.AddWithValue("@forumThreadId", forumThreadPost.ThreadId);
-                    command.Prepare();
-                    command.ExecuteNonQuery();
+                    await command.PrepareAsync();
+                    await command.ExecuteNonQueryAsync();
 
-                    transaction.Commit();
+                    await transaction.CommitAsync();
                     Console.WriteLine($"Created user forum thread post.");
                 }
                 catch (Exception ex)
@@ -40,7 +40,7 @@ namespace WebApp.Facades
                     // Attempt to roll back the transaction.
                     try
                     {
-                        transaction.Rollback();
+                        await transaction.RollbackAsync();
                     }
                     catch (Exception ex2)
                     {
@@ -53,11 +53,11 @@ namespace WebApp.Facades
             }
         }
 
-        internal static async Task<ForumThreadPost?> Get(long id)
+        internal static async Task<ForumThreadPost?> Get(long? id)
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
-                connection.Open();
+                await connection.OpenAsync();
                 MySqlCommand command = connection.CreateCommand();
                 command.Connection = connection;
 
@@ -98,19 +98,19 @@ namespace WebApp.Facades
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
-                connection.Open();
+                await connection.OpenAsync();
                 MySqlCommand command = connection.CreateCommand();
                 command.Connection = connection;
 
                 command.CommandText = "select * from db_forum_thread_post where forum_thread_Id = @id";
                 command.Parameters.AddWithValue("@id", id);
-                command.Prepare();
+                await command.PrepareAsync();
 
                 string? title = null;
                 string? content = null;
                 long userId = 0;
                 long threadId = 0;
-                MySqlDataReader reader = command.ExecuteReader();
+                MySqlDataReader reader = await command.ExecuteReaderAsync();
                 List<ForumThreadPostDTO> list = new List<ForumThreadPostDTO>();
                 while (reader.Read())
                 {
@@ -137,6 +137,50 @@ namespace WebApp.Facades
             }
         }
 
+        internal static async Task Edit(User user, ForumThreadPostDTO threadPostDTO)
+        {
+            long? id = threadPostDTO.Id;
+            string content = threadPostDTO.Content;
+            ForumThreadPost? post = await Get(id);
+            if (post.Author.Id != user.Id)
+            {
+                throw new API_Exception(HttpStatusCode.Unauthorized, "Cannot edit another user's post.");
+            }
+
+            using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
+            {
+                connection.Open();
+                MySqlCommand command = connection.CreateCommand();
+                MySqlTransaction transaction = await connection.BeginTransactionAsync();
+                command.Connection = connection;
+                command.Transaction = transaction;
+
+                try
+                {
+                    command.CommandText = "update db_forum_thread_post set content = @content where id = @id";
+                    command.Parameters.AddWithValue("@id", id);
+                    command.Parameters.AddWithValue("@content", content);
+                    await command.PrepareAsync();
+                    await command.ExecuteNonQueryAsync();
+                    await transaction.CommitAsync();
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        await transaction.RollbackAsync();
+                    }
+                    catch (Exception ex2)
+                    {
+                        Console.WriteLine("Rollback Exception Type: {0}", ex2.GetType());
+                        Console.WriteLine("  Message: {0}", ex2.Message);
+                    }
+
+                    throw new API_Exception(HttpStatusCode.InternalServerError, "Internal server error");
+                }
+            }
+        }
+
         internal static async Task Delete(User user, long id)
         {
             ForumThreadPost? post = await Get(id);
@@ -147,9 +191,9 @@ namespace WebApp.Facades
 
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
-                connection.Open();
+                await connection.OpenAsync();
                 MySqlCommand command = connection.CreateCommand();
-                MySqlTransaction transaction = connection.BeginTransaction();
+                MySqlTransaction transaction = await connection.BeginTransactionAsync();
                 command.Connection = connection;
                 command.Transaction = transaction;
 
@@ -157,15 +201,15 @@ namespace WebApp.Facades
                 {
                     command.CommandText = "delete from db_forum_thread_post where id = @id";
                     command.Parameters.AddWithValue("@id", id);
-                    command.Prepare();
-                    command.ExecuteNonQuery();
-                    transaction.Commit();
+                    await command.PrepareAsync();
+                    await command.ExecuteNonQueryAsync();
+                    await transaction.CommitAsync();
                 }
                 catch (Exception ex)
                 {
                     try
                     {
-                        transaction.Rollback();
+                        await transaction.RollbackAsync();
                     }
                     catch (Exception ex2)
                     {
