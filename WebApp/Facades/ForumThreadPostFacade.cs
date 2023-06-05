@@ -13,7 +13,7 @@ namespace WebApp.Facades
     {
         private static HtmlSanitizer sanitizer = new HtmlSanitizer();
 
-        internal static void Create(ForumThreadPost forumThreadPost)
+        internal static async Task Create(ForumThreadPost forumThreadPost)
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
