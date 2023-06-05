@@ -42,7 +42,7 @@ namespace WebApp.Controllers
             {
                 return NotFound("Invalid login");
             }
-            LoginAttempt.OnSuccessfulLogin(userDTO, HttpContext);
+            LoginAttempt.OnSuccessfulLogin(userDTO, HttpContext, _logger);
 
 
             var token = Token.GenerateToken(user);

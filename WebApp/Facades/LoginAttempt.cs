@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using System.Net;
-using System.Threading;
 using WebApp.DTOS;
 using WebApp.ErrorHandling;
 
@@ -13,12 +12,13 @@ namespace WebApp.Facades
         public int attempts { get; set; }
         public DateTime timeout { get; set; }
         public bool hasTimeout { get; set; }
+        public Timer timer;
 
 
         private static ConcurrentDictionary<Tuple<IPAddress, string>, LoginAttempt> loginAttempts = new();
 
         private static int MAX_ATTEMPTS = 10;
-        private static int TIMEOUT_MINUTES = 1;
+        private static int TIMEOUT_MS = 1000 * 60; // 60 seconds
         private static int LOGIN_DELAY = 1000 * 20; // 20 seconds
 
         private static int tmp_int;
@@ -30,6 +30,22 @@ namespace WebApp.Facades
             this.username = username;
             this.attempts = 0;
             this.hasTimeout = false;
+            this.timer = new Timer(OnTimerFinish, this, TIMEOUT_MS, Timeout.Infinite);
+        }
+
+        /// <summary>
+        /// Removes login attempt from memory after a delay.
+        /// </summary>
+        private void OnTimerFinish(object stateinfo) {
+            // Remove object from ConcurrentDictionary after 'TIMEOUT_MS' delay
+            if(this.timeout < DateTime.Now) {
+                var key = new Tuple<IPAddress, string>(IP, username);
+                LoginAttempt loginAttempt;
+                loginAttempts.Remove(key, out loginAttempt);
+            } else {
+                // Run timer again if timeout is still active
+                this.timer = new Timer(OnTimerFinish, this, TIMEOUT_MS, Timeout.Infinite);
+            }
         }
 
         /// <summary>
@@ -57,17 +73,17 @@ namespace WebApp.Facades
 
             if (!loginAttempt.hasTimeout)
             {
-                loginAttempt.timeout = DateTime.Now.AddMinutes(TIMEOUT_MINUTES);
+                loginAttempt.timeout = DateTime.Now.AddMilliseconds(TIMEOUT_MS);
                 loginAttempt.hasTimeout = true;
             }
 
             if (loginAttempt.timeout > DateTime.Now)
             {
-                logger.LogWarning($"Failed login attempt from IP '{IP}' with username '{userDTO.Username}'. Attempts: {loginAttempt.attempts}.");
+                logger.LogWarning($"[{DateTime.Now}]  Failed login attempt from IP '{IP}' with username '{userDTO.Username}'. Attempts: {loginAttempt.attempts}.");
                 await Task.Delay(LOGIN_DELAY);
 
                 // Refresh timeout
-                loginAttempt.timeout = DateTime.Now.AddMinutes(TIMEOUT_MINUTES);
+                loginAttempt.timeout = DateTime.Now.AddMilliseconds(TIMEOUT_MS);
 
                 throw new API_Exception(HttpStatusCode.BadRequest, "Invalid login");
             }
@@ -77,7 +93,7 @@ namespace WebApp.Facades
             }
         }
 
-        public static void OnSuccessfulLogin(UserDTO userDTO, HttpContext context)
+        public static void OnSuccessfulLogin(UserDTO userDTO, HttpContext context, ILogger logger)
         {
             LoginAttempt loginAttempt;
             var IP = context.Connection.RemoteIpAddress;
@@ -85,6 +101,8 @@ namespace WebApp.Facades
             var key = new Tuple<IPAddress, string>(IP, username);
 
             loginAttempts.Remove(key, out loginAttempt);
+
+            logger.LogInformation($"[{DateTime.Now}]  Successful login from IP '{IP}' with username '{userDTO.Username}'.");
         }
     }
 }
