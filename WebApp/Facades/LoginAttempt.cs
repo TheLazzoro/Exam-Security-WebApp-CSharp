@@ -30,6 +30,9 @@ namespace WebApp.Facades
             this.username = username;
             this.attempts = 0;
             this.hasTimeout = false;
+        }
+
+        public void TimerStart() {
             this.timer = new Timer(OnTimerFinish, this, TIMEOUT_MS, Timeout.Infinite);
         }
 
@@ -38,13 +41,14 @@ namespace WebApp.Facades
         /// </summary>
         private void OnTimerFinish(object stateinfo) {
             // Remove object from ConcurrentDictionary after 'TIMEOUT_MS' delay
+            Console.WriteLine("Finished timer");
             if(this.timeout < DateTime.Now) {
                 var key = new Tuple<IPAddress, string>(IP, username);
                 LoginAttempt loginAttempt;
                 loginAttempts.Remove(key, out loginAttempt);
             } else {
                 // Run timer again if timeout is still active
-                this.timer = new Timer(OnTimerFinish, this, TIMEOUT_MS, Timeout.Infinite);
+                TimerStart();
             }
         }
 
@@ -62,7 +66,10 @@ namespace WebApp.Facades
             if (!loginAttempts.TryGetValue(key, out loginAttempt))
             {
                 loginAttempt = new LoginAttempt(IP, username);
-                loginAttempts.TryAdd(key, loginAttempt);
+                if(loginAttempts.TryAdd(key, loginAttempt)) {
+                    // object was successfully added, and we can start the timer.
+                    loginAttempt.TimerStart();
+                }
             }
 
             loginAttempt.attempts++;
