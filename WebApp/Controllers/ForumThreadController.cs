@@ -11,6 +11,13 @@ namespace WebApp.Controllers
     [ApiController]
     public class ForumThreadController : Controller
     {
+        private ILogger _logger;
+
+        public ForumThreadController(ILogger logger)
+        {
+            _logger = logger;
+        }
+
         [HttpPost]
         [Authorize]
         public IActionResult Create([FromBody] ForumThreadDTO dto)
@@ -18,7 +25,8 @@ namespace WebApp.Controllers
             var currentUser = Token.GetCurrentUser(HttpContext); // Get user from token rather than from the dto.
 
             ForumThread forumThread = new ForumThread(dto.Title, dto.Content, currentUser);
-            ForumThreadFacade.Create(forumThread);
+            var facade = new ForumThreadFacade(_logger);
+            facade.Create(forumThread);
 
             return Ok();
         }
@@ -26,7 +34,8 @@ namespace WebApp.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(long id)
         {
-            ForumThread? forumThread = await ForumThreadFacade.Get(id);
+            var facade = new ForumThreadFacade(_logger);
+            ForumThread? forumThread = await facade.Get(id);
             var dto = new ForumThreadDTO(forumThread);
             return Ok(dto);
         }
@@ -34,7 +43,8 @@ namespace WebApp.Controllers
         [HttpGet]
         public async Task<IEnumerable<ForumThreadDTO>> GetAll()
         {
-            var forumThreads = await ForumThreadFacade.GetAll();
+            var facade = new ForumThreadFacade(_logger);
+            var forumThreads = await facade.GetAll();
             return forumThreads.ToArray();
         }
     }

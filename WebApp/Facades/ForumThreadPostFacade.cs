@@ -9,11 +9,18 @@ using Ganss.Xss;
 
 namespace WebApp.Facades
 {
-    internal static class ForumThreadPostFacade
+    internal class ForumThreadPostFacade
     {
         private static HtmlSanitizer sanitizer = new HtmlSanitizer();
 
-        internal static async Task Create(ForumThreadPost forumThreadPost)
+        private ILogger _logger;
+
+        public ForumThreadPostFacade(ILogger logger)
+        {
+            _logger = logger;
+        }
+
+        internal async Task Create(ForumThreadPost forumThreadPost)
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
@@ -35,12 +42,11 @@ namespace WebApp.Facades
                     await command.ExecuteNonQueryAsync();
 
                     await transaction.CommitAsync();
-                    Console.WriteLine($"Created user forum thread post.");
+                    _logger.LogInformation("Created user forum thread post.");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Commit Exception Type: {0}", ex.GetType());
-                    Console.WriteLine("  Message: {0}", ex.Message);
+                    _logger.LogWarning($"[{DateTime.Now}]" + ex.Message);
 
                     // Attempt to roll back the transaction.
                     try
@@ -49,8 +55,7 @@ namespace WebApp.Facades
                     }
                     catch (Exception ex2)
                     {
-                        Console.WriteLine("Rollback Exception Type: {0}", ex2.GetType());
-                        Console.WriteLine("  Message: {0}", ex2.Message);
+                        _logger.LogWarning($"[{DateTime.Now}]" + ex2.Message);
                     }
 
                     throw new API_Exception(HttpStatusCode.InternalServerError, "Internal server error");
@@ -58,7 +63,7 @@ namespace WebApp.Facades
             }
         }
 
-        internal static async Task<ForumThreadPost?> Get(long? id)
+        internal async Task<ForumThreadPost?> Get(long? id)
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
@@ -86,7 +91,8 @@ namespace WebApp.Facades
                 }
 
                 User? author = await UserFacade.Get(userId);
-                ForumThread? thread = await ForumThreadFacade.Get(threadId);
+                var threadFacade = new ForumThreadFacade(_logger);
+                ForumThread? thread = await threadFacade.Get(threadId);
                 ForumThreadPost forumThreadPost = new ForumThreadPost
                 {
                     Id = id,
@@ -99,7 +105,7 @@ namespace WebApp.Facades
             }
         }
 
-        internal static async Task<List<ForumThreadPostDTO>?> GetByThreadId(long id)
+        internal async Task<List<ForumThreadPostDTO>?> GetByThreadId(long id)
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
@@ -125,7 +131,8 @@ namespace WebApp.Facades
                     threadId = (long)reader["forum_thread_Id"];
 
                     User? author = await UserFacade.Get(userId);
-                    ForumThread? thread = await ForumThreadFacade.Get(threadId);
+                    var threadFacade = new ForumThreadFacade(_logger);
+                    ForumThread? thread = await threadFacade.Get(threadId);
                     ForumThreadPost forumThreadPost = new ForumThreadPost
                     {
                         Id = postId,
@@ -142,7 +149,7 @@ namespace WebApp.Facades
             }
         }
 
-        internal static async Task Edit(User user, ForumThreadPostDTO threadPostDTO)
+        internal async Task Edit(User user, ForumThreadPostDTO threadPostDTO)
         {
             long? id = threadPostDTO.Id;
             string content = threadPostDTO.Content;
@@ -171,14 +178,15 @@ namespace WebApp.Facades
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogWarning($"[{DateTime.Now}]" + ex.Message);
+
                     try
                     {
                         await transaction.RollbackAsync();
                     }
                     catch (Exception ex2)
                     {
-                        Console.WriteLine("Rollback Exception Type: {0}", ex2.GetType());
-                        Console.WriteLine("  Message: {0}", ex2.Message);
+                        _logger.LogWarning($"[{DateTime.Now}]" + ex2.Message);
                     }
 
                     throw new API_Exception(HttpStatusCode.InternalServerError, "Internal server error");
@@ -186,7 +194,7 @@ namespace WebApp.Facades
             }
         }
 
-        internal static async Task Delete(User user, long id)
+        internal async Task Delete(User user, long id)
         {
             ForumThreadPost? post = await Get(id);
             if (post.Author.Id != user.Id)
@@ -212,14 +220,15 @@ namespace WebApp.Facades
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogWarning($"[{DateTime.Now}]" + ex.Message);
+
                     try
                     {
                         await transaction.RollbackAsync();
                     }
                     catch (Exception ex2)
                     {
-                        Console.WriteLine("Rollback Exception Type: {0}", ex2.GetType());
-                        Console.WriteLine("  Message: {0}", ex2.Message);
+                        _logger.LogWarning($"[{DateTime.Now}]" + ex2.Message);
                     }
 
                     throw new API_Exception(HttpStatusCode.InternalServerError, "Internal server error");

@@ -9,24 +9,26 @@ using Ganss.Xss;
 
 namespace WebApp.Facades
 {
-    internal static class ForumThreadFacade
+    internal class ForumThreadFacade
     {
         private static HtmlSanitizer sanitizer = new HtmlSanitizer();
 
+        private ILogger _logger;
 
-        internal static void Create(ForumThread forumThread)
+        public ForumThreadFacade(ILogger logger)
+        {
+            _logger = logger;
+        }
+
+
+        internal void Create(ForumThread forumThread)
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
                 connection.Open();
                 MySqlCommand command = connection.CreateCommand();
                 MySqlTransaction transaction;
-
-                // Start a local transaction.
                 transaction = connection.BeginTransaction();
-
-                // Must assign both transaction object and connection
-                // to Command object for a pending local transaction
                 command.Connection = connection;
                 command.Transaction = transaction;
 
@@ -45,12 +47,11 @@ namespace WebApp.Facades
 
                     // Attempt to commit the transaction.
                     transaction.Commit();
-                    Console.WriteLine($"Created user forum thread '{title_sanitized}'.");
+                    _logger.LogInformation($"[{DateTime.Now}] Created user forum thread '{title_sanitized}'.");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Commit Exception Type: {0}", ex.GetType());
-                    Console.WriteLine("  Message: {0}", ex.Message);
+                    _logger.LogWarning($"[{DateTime.Now}]" + ex.Message);
 
                     // Attempt to roll back the transaction.
                     try
@@ -59,11 +60,7 @@ namespace WebApp.Facades
                     }
                     catch (Exception ex2)
                     {
-                        // This catch block will handle any errors that may have occurred
-                        // on the server that would cause the rollback to fail, such as
-                        // a closed connection.
-                        Console.WriteLine("Rollback Exception Type: {0}", ex2.GetType());
-                        Console.WriteLine("  Message: {0}", ex2.Message);
+                        _logger.LogWarning($"[{DateTime.Now}]" + ex.Message);
                     }
 
                     throw new API_Exception(HttpStatusCode.InternalServerError, "Internal server error");
@@ -71,7 +68,7 @@ namespace WebApp.Facades
             }
         }
 
-        internal static async Task<ForumThread?> Get(long id)
+        internal async Task<ForumThread?> Get(long id)
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
@@ -110,7 +107,7 @@ namespace WebApp.Facades
             }
         }
 
-        internal static async Task<List<ForumThreadDTO>> GetAll()
+        internal async Task<List<ForumThreadDTO>> GetAll()
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {

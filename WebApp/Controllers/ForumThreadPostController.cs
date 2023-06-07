@@ -11,14 +11,22 @@ namespace WebApp.Controllers
     [ApiController]
     public class ForumThreadPostController : Controller
     {
+        private ILogger _logger;
+
+        public ForumThreadPostController(ILogger logger)
+        {
+            _logger = logger;
+        }
+
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> Create([FromBody] ForumThreadPostDTO dto)
         {
             var currentUser = Token.GetCurrentUser(HttpContext); // Get user from token rather than from the dto.
 
+            var facade = new ForumThreadPostFacade(_logger);
             ForumThreadPost forumThreadPost = new ForumThreadPost(dto.Content, currentUser, dto.ThreadId);
-            await ForumThreadPostFacade.Create(forumThreadPost);
+            await facade.Create(forumThreadPost);
 
             return Ok();
         }
@@ -26,7 +34,8 @@ namespace WebApp.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(long id)
         {
-            var forumThreadPost = await ForumThreadPostFacade.Get(id);
+            var facade = new ForumThreadPostFacade(_logger);
+            var forumThreadPost = await facade.Get(id);
             var dto = new ForumThreadPostDTO(forumThreadPost);
             return Ok(dto);
         }
@@ -34,7 +43,8 @@ namespace WebApp.Controllers
         [HttpGet("Thread/{id}")]
         public async Task<IEnumerable<ForumThreadPostDTO>> GetByThreadId(long id)
         {
-            var threadPosts = await ForumThreadPostFacade.GetByThreadId(id); 
+            var facade = new ForumThreadPostFacade(_logger);
+            var threadPosts = await facade.GetByThreadId(id); 
             return threadPosts.ToArray();
         }
 
@@ -43,7 +53,8 @@ namespace WebApp.Controllers
         public async Task<IActionResult> Edit([FromBody] ForumThreadPostDTO dto)
         {
             var user = Token.GetCurrentUser(HttpContext);
-            await ForumThreadPostFacade.Edit(user, dto);
+            var facade = new ForumThreadPostFacade(_logger);
+            await facade.Edit(user, dto);
 
             return Ok();
         }
@@ -53,7 +64,8 @@ namespace WebApp.Controllers
         public async Task<IActionResult> Delete(long id)
         {
             var user = Token.GetCurrentUser(HttpContext);
-            await ForumThreadPostFacade.Delete(user, id);
+            var facade = new ForumThreadPostFacade(_logger);
+            await facade.Delete(user, id);
 
             return Ok();
         }
