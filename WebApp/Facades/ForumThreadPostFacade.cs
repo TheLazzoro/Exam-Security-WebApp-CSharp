@@ -169,9 +169,11 @@ namespace WebApp.Facades
 
                 try
                 {
+                    string content_sanitized = sanitizer.Sanitize(threadPostDTO.Content);
+
                     command.CommandText = "update db_forum_thread_post set content = @content where id = @id";
                     command.Parameters.AddWithValue("@id", id);
-                    command.Parameters.AddWithValue("@content", content);
+                    command.Parameters.AddWithValue("@content", content_sanitized);
                     await command.PrepareAsync();
                     await command.ExecuteNonQueryAsync();
                     await transaction.CommitAsync();
