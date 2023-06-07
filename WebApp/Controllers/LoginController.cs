@@ -38,10 +38,6 @@ namespace WebApp.Controllers
             await Task.Delay(1000);
 
             User? user = await LoginFacade.VerifyLogin(userDTO);
-            if (user == null)
-            {
-                return NotFound("Invalid login");
-            }
             LoginAttempt.OnSuccessfulLogin(userDTO, HttpContext, _logger);
 
 

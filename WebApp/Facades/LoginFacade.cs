@@ -173,7 +173,7 @@ namespace WebApp.Facades
                 }
             }
 
-            return null;
+            throw new API_Exception(HttpStatusCode.BadRequest, "Invalid login");
         }
     }
 }
