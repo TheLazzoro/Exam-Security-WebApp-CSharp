@@ -13,7 +13,7 @@ namespace WebApp.Controllers
     {
         private ILogger _logger;
 
-        public ForumThreadPostController(ILogger logger)
+        public ForumThreadPostController(ILogger<ForumThreadPostController> logger)
         {
             _logger = logger;
         }

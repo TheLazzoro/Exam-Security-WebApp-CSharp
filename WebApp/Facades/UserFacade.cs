@@ -12,6 +12,7 @@ using WebApp.Database;
 using WebApp.Utility;
 using System.Transactions;
 using SixLabors.ImageSharp;
+using System.Text.RegularExpressions;
 
 namespace WebApp.Facades
 {

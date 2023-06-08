@@ -37,12 +37,16 @@ namespace WebApp.Facades
                     string title_sanitized = sanitizer.Sanitize(forumThread.Title);
                     string content_sanitized = sanitizer.Sanitize(forumThread.Content);
 
+                    command.CommandText = $"Insert into db_forum_thread (title, content, user_id) VALUES ('{forumThread.Title}', '{forumThread.Content}', {forumThread.Author.Id})";
+
                     // Prepared statement query
+                    /*
                     command.CommandText = "Insert into db_forum_thread (title, content, user_id) VALUES (@title, @content, @userId)";
                     command.Parameters.AddWithValue("@title", title_sanitized);
                     command.Parameters.AddWithValue("@content", content_sanitized);
                     command.Parameters.AddWithValue("@userId", forumThread.Author.Id);
                     command.Prepare();
+                    */
                     command.ExecuteNonQuery();
 
                     // Attempt to commit the transaction.
@@ -115,7 +119,7 @@ namespace WebApp.Facades
                 MySqlCommand command = connection.CreateCommand();
                 command.Connection = connection;
 
-                command.CommandText = "select * from db_forum_thread ";
+                command.CommandText = "select * from db_forum_thread";
 
 
                 MySqlDataReader reader = command.ExecuteReader();

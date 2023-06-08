@@ -38,6 +38,19 @@ namespace WebApp.ErrorHandling
 
                 await _next(context);
             }
+            catch (CAPTCHA_Exception ex)
+            {
+                context.Response.ContentType = "application/json";
+                context.Response.StatusCode = (int)ex.StatusCode;
+                var error = new ResponseDTO_CAPTCHA
+                {
+                    StatusCode = context.Response.StatusCode,
+                    Message = ex.Message,
+                    captcha = ex.captcha,
+                };
+
+                await context.Response.WriteAsync(error.ToString());
+            }
             catch (API_Exception ex)
             {
                 context.Response.ContentType = "application/json";

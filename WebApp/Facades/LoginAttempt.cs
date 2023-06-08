@@ -52,10 +52,10 @@ namespace WebApp.Facades
         }
 
         /// <summary>
-        /// 
+        /// Returns true when login attempts is lower than max attemtps.
         /// </summary>
         /// <exception cref="API_Exception"></exception>
-        public static async Task OnAttempt(UserDTO userDTO, HttpContext context, ILogger logger)
+        public static async Task<bool> OnAttempt(UserDTO userDTO, HttpContext context, ILogger logger)
         {
             IPAddress IP = context.Connection.RemoteIpAddress;
             string username = userDTO.Username;
@@ -74,7 +74,7 @@ namespace WebApp.Facades
             loginAttempt.attempts++;
             if (loginAttempt.attempts < MAX_ATTEMPTS)
             {
-                return;
+                return true;
             }
 
             if (!loginAttempt.hasTimeout)
@@ -86,16 +86,18 @@ namespace WebApp.Facades
             if (loginAttempt.timeout > DateTime.Now)
             {
                 logger.LogWarning($"[{DateTime.Now}]  Failed login attempt from IP '{IP}' with username '{userDTO.Username}'. Attempts: {loginAttempt.attempts}.");
-                await Task.Delay(LOGIN_DELAY);
+                //await Task.Delay(LOGIN_DELAY);
 
                 // Refresh timeout
                 loginAttempt.timeout = DateTime.Now.AddMilliseconds(TIMEOUT_MS);
 
-                throw new API_Exception(HttpStatusCode.BadRequest, "Invalid login");
+                return false;
+                //throw new API_Exception(HttpStatusCode.BadRequest, "Invalid login");
             }
             else
             {
                 loginAttempts.Remove(key, out loginAttempt);
+                return true;
             }
         }
 

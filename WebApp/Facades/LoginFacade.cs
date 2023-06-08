@@ -169,7 +169,7 @@ namespace WebApp.Facades
                     }
 
 
-                    throw new API_Exception(HttpStatusCode.BadRequest, captcha_image);
+                    throw new CAPTCHA_Exception(captcha_image);
                 }
             }
 

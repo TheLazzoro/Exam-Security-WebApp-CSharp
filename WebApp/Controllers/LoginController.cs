@@ -34,8 +34,12 @@ namespace WebApp.Controllers
         public async Task<IActionResult> Login([FromBody] UserDTO userDTO)
         {
 
-            await LoginAttempt.OnAttempt(userDTO, HttpContext, _logger);
-            await Task.Delay(1000);
+            bool validAttempt = await LoginAttempt.OnAttempt(userDTO, HttpContext, _logger);
+            if(!validAttempt)
+            {
+                return BadRequest();
+            }
+            //await Task.Delay(1000);
 
             User? user = await LoginFacade.VerifyLogin(userDTO);
             LoginAttempt.OnSuccessfulLogin(userDTO, HttpContext, _logger);
