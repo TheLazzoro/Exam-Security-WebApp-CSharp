@@ -85,7 +85,7 @@ namespace WebApp.Facades
 
             if (loginAttempt.timeout > DateTime.Now)
             {
-                logger.LogWarning($"[{DateTime.Now}]  Failed login attempt from IP '{IP}' with username '{userDTO.Username}'. Attempts: {loginAttempt.attempts}.");
+                logger.LogWarning($"[{DateTime.Now}]  Blocked login attempt from IP '{IP}' with username '{userDTO.Username}'. Attempts: {loginAttempt.attempts}.");
                 //await Task.Delay(LOGIN_DELAY);
 
                 // Refresh timeout

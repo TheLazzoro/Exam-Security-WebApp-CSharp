@@ -39,7 +39,7 @@ namespace WebApp.Controllers
             {
                 return BadRequest();
             }
-            //await Task.Delay(1000);
+            await Task.Delay(1000);
 
             User? user = await LoginFacade.VerifyLogin(userDTO);
             LoginAttempt.OnSuccessfulLogin(userDTO, HttpContext, _logger);
