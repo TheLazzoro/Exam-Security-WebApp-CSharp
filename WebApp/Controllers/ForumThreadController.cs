@@ -19,7 +19,7 @@ namespace WebApp.Controllers
         }
 
         [HttpPost]
-        [Authorize]
+        [Authorize(Roles = "user")]
         public IActionResult Create([FromBody] ForumThreadDTO dto)
         {
             var currentUser = Token.GetCurrentUser(HttpContext); // Get user from token rather than from the dto.

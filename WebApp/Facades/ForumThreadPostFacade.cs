@@ -46,7 +46,7 @@ namespace WebApp.Facades
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning($"[{DateTime.Now}]" + ex.Message);
+                    _logger.LogError($"[{DateTime.Now}]" + ex.Message);
 
                     // Attempt to roll back the transaction.
                     try
@@ -55,7 +55,7 @@ namespace WebApp.Facades
                     }
                     catch (Exception ex2)
                     {
-                        _logger.LogWarning($"[{DateTime.Now}]" + ex2.Message);
+                        _logger.LogError($"[{DateTime.Now}]" + ex2.Message);
                     }
 
                     throw new API_Exception(HttpStatusCode.InternalServerError, "Internal server error");
@@ -180,7 +180,7 @@ namespace WebApp.Facades
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning($"[{DateTime.Now}]" + ex.Message);
+                    _logger.LogError($"[{DateTime.Now}]" + ex.Message);
 
                     try
                     {
@@ -188,7 +188,7 @@ namespace WebApp.Facades
                     }
                     catch (Exception ex2)
                     {
-                        _logger.LogWarning($"[{DateTime.Now}]" + ex2.Message);
+                        _logger.LogError($"[{DateTime.Now}]" + ex2.Message);
                     }
 
                     throw new API_Exception(HttpStatusCode.InternalServerError, "Internal server error");
@@ -222,7 +222,7 @@ namespace WebApp.Facades
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning($"[{DateTime.Now}]" + ex.Message);
+                    _logger.LogError($"[{DateTime.Now}]" + ex.Message);
 
                     try
                     {
@@ -230,7 +230,7 @@ namespace WebApp.Facades
                     }
                     catch (Exception ex2)
                     {
-                        _logger.LogWarning($"[{DateTime.Now}]" + ex2.Message);
+                        _logger.LogError($"[{DateTime.Now}]" + ex2.Message);
                     }
 
                     throw new API_Exception(HttpStatusCode.InternalServerError, "Internal server error");

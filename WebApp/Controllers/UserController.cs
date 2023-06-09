@@ -31,6 +31,16 @@ namespace WebApp.Controllers
             return new UserSafeDTO(user);
         }
 
+        /// <summary>
+        /// Only accessible by admin users.
+        /// </summary>
+        [HttpGet("admin")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> GetAdmin()
+        {
+            return Ok();
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateUser([FromBody] UserDTO dto)
         {
