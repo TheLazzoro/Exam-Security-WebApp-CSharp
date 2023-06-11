@@ -12,6 +12,7 @@ namespace WebApp.Controllers
     public class ForumThreadPostController : Controller
     {
         private ILogger _logger;
+        private static RequestLimiter requestLimiter = new RequestLimiter(10, 60);
 
         public ForumThreadPostController(ILogger<ForumThreadPostController> logger)
         {
@@ -23,6 +24,11 @@ namespace WebApp.Controllers
         public async Task<IActionResult> Create([FromBody] ForumThreadPostDTO dto)
         {
             var currentUser = Token.GetCurrentUser(HttpContext); // Get user from token rather than from the dto.
+            bool canRequest = await requestLimiter.OnRequest(currentUser.Username, HttpContext, _logger);
+            if (!canRequest)
+            {
+                return BadRequest();
+            }
 
             var facade = new ForumThreadPostFacade(_logger);
             ForumThreadPost forumThreadPost = new ForumThreadPost(dto.Content, currentUser, dto.ThreadId);

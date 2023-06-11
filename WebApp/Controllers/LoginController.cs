@@ -22,6 +22,7 @@ namespace WebApp.Controllers
 
         private IConfiguration _config;
         private readonly ILogger _logger;
+        private static RequestLimiter requestLimiter = new RequestLimiter(10, 60); // 10 attempts, 60 second timeout.
 
         public LoginController(IConfiguration config, ILogger<LoginController> logger)
         {
@@ -33,8 +34,7 @@ namespace WebApp.Controllers
         [HttpPost]
         public async Task<IActionResult> Login([FromBody] UserDTO userDTO)
         {
-
-            bool validAttempt = await LoginAttempt.OnAttempt(userDTO, HttpContext, _logger);
+            bool validAttempt = await requestLimiter.OnRequest(userDTO.Username, HttpContext, _logger);
             if(!validAttempt)
             {
                 return BadRequest();
@@ -42,7 +42,7 @@ namespace WebApp.Controllers
             await Task.Delay(1000);
 
             User? user = await LoginFacade.VerifyLogin(userDTO);
-            LoginAttempt.OnSuccessfulLogin(userDTO, HttpContext, _logger);
+            requestLimiter.OnSuccessfulLogin(userDTO, HttpContext, _logger);
 
 
             var token = Token.GenerateToken(user);

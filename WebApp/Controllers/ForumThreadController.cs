@@ -7,11 +7,13 @@ using WebApp.Utility;
 
 namespace WebApp.Controllers
 {
+
     [Route("[controller]")]
     [ApiController]
     public class ForumThreadController : Controller
     {
         private ILogger _logger;
+        private static RequestLimiter requestLimiter = new RequestLimiter(10, 60);
 
         public ForumThreadController(ILogger<ForumThreadController> logger)
         {
@@ -20,9 +22,14 @@ namespace WebApp.Controllers
 
         [HttpPost]
         [Authorize(Roles = "user")]
-        public IActionResult Create([FromBody] ForumThreadDTO dto)
+        public async Task<IActionResult> Create([FromBody] ForumThreadDTO dto)
         {
             var currentUser = Token.GetCurrentUser(HttpContext); // Get user from token rather than from the dto.
+            bool canRequest = await requestLimiter.OnRequest(currentUser.Username, HttpContext, _logger);
+            if (!canRequest)
+            {
+                return BadRequest();
+            }
 
             ForumThread forumThread = new ForumThread(dto.Title, dto.Content, currentUser);
             var facade = new ForumThreadFacade(_logger);
