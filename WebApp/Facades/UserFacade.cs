@@ -26,18 +26,21 @@ namespace WebApp.Facades
         internal static async Task Create(UserDTO dto)
         {
             string password = dto.Password;
-            if(string.IsNullOrEmpty(password)) {
+            if (string.IsNullOrEmpty(password))
+            {
                 throw new API_Exception(HttpStatusCode.BadRequest, "Password cannot be empty.");
             }
-            if(password.Length < 8) {
+            if (password.Length < 8)
+            {
                 throw new API_Exception(HttpStatusCode.BadRequest, "Password is too short.");
             }
-            if(
+            if (
                 !password.Any(char.IsDigit)
                 || !password.Any(char.IsLetter)
                 || !password.Any(char.IsLower)
                 || !password.Any(char.IsUpper)
-                ) {
+                )
+            {
                 throw new API_Exception(HttpStatusCode.BadRequest, "Password must contain at least one letter, one lower/upper case letter, and a number.");
             }
 
@@ -191,7 +194,7 @@ namespace WebApp.Facades
 
                 Role? role = null;
                 MySqlDataReader reader = await command.ExecuteReaderAsync();
-                if(reader.Read())
+                if (reader.Read())
                 {
                     string rolename = reader["rolename"].ToString();
                     role = new Role()
@@ -236,7 +239,8 @@ namespace WebApp.Facades
         internal static async Task UploadImage(IFormFile file, HttpContext context)
         {
             string filename = file.FileName;
-            if(!filename.EndsWith(".jpg") && !filename.EndsWith(".png")) {
+            if (!filename.EndsWith(".jpg") && !filename.EndsWith(".png"))
+            {
                 throw new API_Exception(HttpStatusCode.BadRequest, "Invalid file type.");
             }
 
@@ -279,7 +283,19 @@ namespace WebApp.Facades
 
             // Extra check that parses the file content.
             // Throws exception if content is invalid.
-            Image img = Image.Load(buffer);
+            Image img;
+            try
+            {
+                img = Image.Load(buffer);
+                if(img == null)
+                {
+                    throw new Exception(string.Empty);
+                }
+            }
+            catch (Exception)
+            {
+                throw new API_Exception(HttpStatusCode.BadRequest, "Invalid file type.");
+            }
 
             // File is valid/safe, we can continue.
 
@@ -301,7 +317,7 @@ namespace WebApp.Facades
             fileName += ext;
             string fullNewPath = Path.Combine(dir, fileName);
 
-            if(!Directory.Exists(localDir))
+            if (!Directory.Exists(localDir))
             {
                 // TODO:
             }
@@ -356,10 +372,13 @@ namespace WebApp.Facades
                     }
 
                     // Write new image
-                    using (FileStream fileStream = File.Create(fullNewPath))
+                    if (isJpeg)
                     {
-                        var s = new MemoryStream(buffer);
-                        s.CopyTo(fileStream);
+                        await img.SaveAsJpegAsync(fullNewPath);
+                    }
+                    else
+                    {
+                        await img.SaveAsPngAsync(fullNewPath);
                     }
 
                 }
@@ -411,7 +430,7 @@ namespace WebApp.Facades
                 string imagePath = string.Empty;
                 string username = string.Empty;
                 MySqlDataReader reader = command.ExecuteReader();
-                if(reader.Read())
+                if (reader.Read())
                 {
                     imagePath = reader["user_image"].ToString();
                     username = reader["username"].ToString();
