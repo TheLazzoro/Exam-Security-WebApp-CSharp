@@ -3,22 +3,25 @@ using System.Net;
 using WebApp.DTOS;
 using WebApp.ErrorHandling;
 
-namespace WebApp.Facades
+namespace WebApp.Utility
 {
     public class RequestLimiter
     {
-        private ConcurrentDictionary<Tuple<IPAddress, string>, RequestInfo> loginAttempts = new();
+        private ConcurrentDictionary<Tuple<IPAddress, string>, RequestInfo> requests = new();
 
         private uint MAX_ATTEMPTS;
         private uint TIMEOUT_SECONDS;
+        private uint TIMEOUT_MS;
 
         /// <summary>
         /// An instance of a request limiter, keeping track of IP-username pairs.
+        /// NOTE: Must be declared static when used in controllers.
         /// </summary>
         public RequestLimiter(uint MAX_ATTEMPTS, uint TIMEOUT_SECONDS)
         {
             this.MAX_ATTEMPTS = MAX_ATTEMPTS;
             this.TIMEOUT_SECONDS = TIMEOUT_SECONDS;
+            this.TIMEOUT_MS = TIMEOUT_SECONDS * 1000;
         }
 
         /// <summary>
@@ -31,10 +34,11 @@ namespace WebApp.Facades
             var key = new Tuple<IPAddress, string>(IP, username);
 
             RequestInfo requestInfo;
-            if (!loginAttempts.TryGetValue(key, out requestInfo))
+            if (!requests.TryGetValue(key, out requestInfo))
             {
                 requestInfo = new RequestInfo(IP, username);
-                if(loginAttempts.TryAdd(key, requestInfo)) {
+                if (requests.TryAdd(key, requestInfo))
+                {
                     // object was successfully added, and we can start the timer.
                     TimerStart(requestInfo);
                 }
@@ -65,7 +69,7 @@ namespace WebApp.Facades
             }
             else
             {
-                loginAttempts.Remove(key, out requestInfo);
+                requests.Remove(key, out requestInfo);
                 return true;
             }
         }
@@ -77,7 +81,7 @@ namespace WebApp.Facades
             string username = userDTO.Username;
             var key = new Tuple<IPAddress, string>(IP, username);
 
-            loginAttempts.Remove(key, out requestInfo);
+            requests.Remove(key, out requestInfo);
 
             logger.LogInformation($"[{DateTime.Now}]  Successful login from IP '{IP}' with username '{userDTO.Username}'.");
         }
@@ -85,7 +89,7 @@ namespace WebApp.Facades
 
         private void TimerStart(RequestInfo requestInfo)
         {
-            requestInfo.timer = new Timer(OnTimerFinish, requestInfo, TIMEOUT_SECONDS, Timeout.Infinite);
+            requestInfo.timer = new Timer(OnTimerFinish, requestInfo, TIMEOUT_MS, Timeout.Infinite);
         }
 
         /// <summary>
@@ -101,7 +105,7 @@ namespace WebApp.Facades
             if (requestInfo.timeout < DateTime.Now)
             {
                 var key = new Tuple<IPAddress, string>(IP, username);
-                loginAttempts.Remove(key, out requestInfo);
+                requests.Remove(key, out requestInfo);
             }
             else
             {

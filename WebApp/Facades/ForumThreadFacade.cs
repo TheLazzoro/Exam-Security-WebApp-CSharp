@@ -49,7 +49,7 @@ namespace WebApp.Facades
 
                     // Attempt to commit the transaction.
                     transaction.Commit();
-                    _logger.LogInformation($"[{DateTime.Now}] Created user forum thread '{title_sanitized}'.");
+                    _logger.LogInformation($"[{DateTime.Now}] '{forumThread.Author.Username}' created forum thread '{title_sanitized}'.");
                 }
                 catch (Exception ex)
                 {

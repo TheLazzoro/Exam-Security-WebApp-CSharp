@@ -42,7 +42,7 @@ namespace WebApp.Facades
                     await command.ExecuteNonQueryAsync();
 
                     await transaction.CommitAsync();
-                    _logger.LogInformation("Created user forum thread post.");
+                    _logger.LogInformation($"[{DateTime.Now}] '{forumThreadPost.Author.Username}' created forum thread post with thread id '{forumThreadPost.ThreadId}'.");
                 }
                 catch (Exception ex)
                 {

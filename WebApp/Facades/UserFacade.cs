@@ -16,14 +16,19 @@ using System.Text.RegularExpressions;
 
 namespace WebApp.Facades
 {
-    internal static class UserFacade
+    public class UserFacade
     {
+        ILogger _logger;
 
+        public UserFacade(ILogger logger)
+        {
+            _logger = logger;
+        }
 
         /// <summary>
         /// Returns true if user was created.
         /// </summary>
-        internal static async Task Create(UserDTO dto)
+        public async Task Create(UserDTO dto)
         {
             string password = dto.Password;
             if (string.IsNullOrEmpty(password))
@@ -102,7 +107,7 @@ namespace WebApp.Facades
             }
         }
 
-        internal static async Task<User?> Get(string username)
+        public static async Task<User?> Get(string username)
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
@@ -141,7 +146,7 @@ namespace WebApp.Facades
             }
         }
 
-        internal static async Task<User?> Get(long id)
+        public static async Task<User?> Get(long id)
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
@@ -180,7 +185,7 @@ namespace WebApp.Facades
             }
         }
 
-        internal static async Task<Role?> GetRoleById(long? id)
+        public static async Task<Role?> GetRoleById(long? id)
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
@@ -208,7 +213,7 @@ namespace WebApp.Facades
             }
         }
 
-        internal static async Task<Role?> GetRoleByName(string name)
+        public static async Task<Role?> GetRoleByName(string name)
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {
@@ -236,7 +241,7 @@ namespace WebApp.Facades
             }
         }
 
-        internal static async Task UploadImage(IFormFile file, HttpContext context)
+        public async Task UploadImage(IFormFile file, HttpContext context)
         {
             string filename = file.FileName;
             if (!filename.EndsWith(".jpg") && !filename.EndsWith(".png"))
@@ -317,11 +322,6 @@ namespace WebApp.Facades
             fileName += ext;
             string fullNewPath = Path.Combine(dir, fileName);
 
-            if (!Directory.Exists(localDir))
-            {
-                // TODO:
-            }
-
             if (!Directory.Exists(dir))
             {
                 Directory.CreateDirectory(dir);
@@ -381,6 +381,8 @@ namespace WebApp.Facades
                         await img.SaveAsPngAsync(fullNewPath);
                     }
 
+                    _logger.LogInformation($"[{DateTime.Now}] Updated image for '{user.Username}'");
+
                 }
                 catch (Exception ex)
                 {
@@ -409,13 +411,13 @@ namespace WebApp.Facades
         /// <summary>
         /// Slight overhead on this method, since we need to find the user by username first.
         /// </summary>
-        internal static string GetUserImagePath(string username, HttpContext context)
+        public static string GetUserImagePath(string username, HttpContext context)
         {
             var user = Get(username);
             return GetUserImagePath(user.Id, context);
         }
 
-        internal static string GetUserImagePath(long userId, HttpContext context)
+        public static string GetUserImagePath(long userId, HttpContext context)
         {
             using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
             {

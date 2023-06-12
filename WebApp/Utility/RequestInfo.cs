@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace WebApp.Facades
+namespace WebApp.Utility
 {
     public class RequestInfo
     {
@@ -15,8 +15,8 @@ namespace WebApp.Facades
         {
             this.IP = IP;
             this.username = username;
-            this.attempts = 0;
-            this.hasTimeout = false;
+            attempts = 0;
+            hasTimeout = false;
         }
     }
 }

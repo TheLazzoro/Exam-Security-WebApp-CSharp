@@ -17,6 +17,15 @@ namespace WebApp.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
+        private ILogger _logger;
+        private static RequestLimiter requestLimiter = new RequestLimiter(10, 60);
+
+
+        public UserController(ILogger<UserController> logger)
+        {
+            _logger = logger;
+        }
+
         [HttpGet]
         [Authorize(Roles = "user")]
         public IActionResult Get()
@@ -45,7 +54,8 @@ namespace WebApp.Controllers
         public async Task<IActionResult> CreateUser([FromBody] UserDTO dto)
         {
             //UserDTO dto = JsonConvert.DeserializeObject<UserDTO>(value);
-            await UserFacade.Create(dto);
+            var facade = new UserFacade(_logger);
+            await facade.Create(dto);
 
             var msg = new ResponseDTO()
             {
@@ -63,12 +73,20 @@ namespace WebApp.Controllers
         [RequestSizeLimit(1024 * 1024 * 10)] // 10 MB
         public async Task<IActionResult> UploadImage([FromForm] IFormFile file)
         {
-            if(!file.ContentType.StartsWith("image/"))
+            var user = Token.GetCurrentUser(HttpContext);
+            bool canRequest = await requestLimiter.OnRequest(user.Username, HttpContext, _logger);
+            if(!canRequest)
+            {
+                return BadRequest();
+            }
+
+            if (!file.ContentType.StartsWith("image/"))
             {
                 return BadRequest("Only images are supported.");
             }
 
-            await UserFacade.UploadImage(file, HttpContext);
+            var facade = new UserFacade(_logger);
+            await facade.UploadImage(file, HttpContext);
             var msg = new ResponseDTO()
             {
                 Message = "Uploaded image.",
