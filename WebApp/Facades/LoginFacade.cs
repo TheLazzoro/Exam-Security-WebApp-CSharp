@@ -21,7 +21,13 @@ namespace WebApp.Facades
         private static readonly string CAPTCHA_FONT = "Lato";
 #endif
 
-            
+        private static readonly SixLaborsCaptchaModule slc = new SixLaborsCaptchaModule(new SixLaborsCaptchaOptions
+        {
+            DrawLines = 7,
+            TextColor = new Color[] { Color.Blue, Color.Black },
+            FontFamilies = new string[] { CAPTCHA_FONT },
+        });
+
 
         /// <summary>
         /// Returns null if user login was invalid
@@ -136,13 +142,6 @@ namespace WebApp.Facades
 
                 if (loginAttempts > MAX_ATTEMPTS)
                 {
-
-                    var slc = new SixLaborsCaptchaModule(new SixLaborsCaptchaOptions
-                    {
-                        DrawLines = 7,
-                        TextColor = new Color[] { Color.Blue, Color.Black },
-                        FontFamilies = new string[] { CAPTCHA_FONT },
-                    });
 
                     string captcha = Extensions.GetUniqueKey(CAPTCHA_LENGTH);
                     byte[] buffer = slc.Generate(captcha);

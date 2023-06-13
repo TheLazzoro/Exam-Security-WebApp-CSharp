@@ -59,7 +59,7 @@ namespace WebApp.Utility
             if (requestInfo.timeout > DateTime.Now)
             {
                 logger.LogWarning($"[{DateTime.Now}]  Blocked request from IP '{IP}' with username '{username}'. Attempts: {requestInfo.attempts}.");
-                //await Task.Delay(LOGIN_DELAY);
+                //await Task.Delay(20 * 1000);
 
                 // Refresh timeout
                 requestInfo.timeout = DateTime.Now.AddSeconds(TIMEOUT_SECONDS);
@@ -69,6 +69,7 @@ namespace WebApp.Utility
             }
             else
             {
+                // Delay has expired
                 requests.Remove(key, out requestInfo);
                 return true;
             }

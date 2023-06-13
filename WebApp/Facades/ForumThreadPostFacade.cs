@@ -32,10 +32,10 @@ namespace WebApp.Facades
 
                 try
                 {
-                    //string content_sanitized = sanitizer.Sanitize(forumThreadPost.Content);
+                    string content_sanitized = sanitizer.Sanitize(forumThreadPost.Content);
 
                     command.CommandText = "Insert into db_forum_thread_post (content, user_id, forum_thread_Id) VALUES (@content, @userId, @forumThreadId)";
-                    command.Parameters.AddWithValue("@content", forumThreadPost.Content);
+                    command.Parameters.AddWithValue("@content", content_sanitized);
                     command.Parameters.AddWithValue("@userId", forumThreadPost.Author.Id);
                     command.Parameters.AddWithValue("@forumThreadId", forumThreadPost.ThreadId);
                     await command.PrepareAsync();
