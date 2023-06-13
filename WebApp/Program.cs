@@ -41,6 +41,9 @@ builder.Services.AddAuthentication(x =>
     x.TokenValidationParameters = Token.GetValidationParameters();
 });
 
+// Repeating new shared key.
+builder.Services.AddHostedService<SharedSecret>();
+
 builder.Services.AddAuthorization();
 
 string corsPolicy = "corsPolicy";
