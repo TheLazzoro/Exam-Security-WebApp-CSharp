@@ -144,5 +144,46 @@ namespace WebApp.Facades
                 return list;
             }
         }
+
+        internal async Task Delete(User user, long threadId) {
+            ForumThread? thread = await Get(threadId);
+            if (thread.Author.Id != user.Id)
+            {
+                throw new API_Exception(HttpStatusCode.Unauthorized, "Cannot delete another user's thread.");
+            }
+
+            using (MySqlConnection connection = new MySqlConnection(SQLConnection.connectionString))
+            {
+                await connection.OpenAsync();
+                MySqlCommand command = connection.CreateCommand();
+                MySqlTransaction transaction = await connection.BeginTransactionAsync();
+                command.Connection = connection;
+                command.Transaction = transaction;
+
+                try
+                {
+                    command.CommandText = "delete from db_forum_thread where id = @id";
+                    command.Parameters.AddWithValue("@id", threadId);
+                    await command.PrepareAsync();
+                    await command.ExecuteNonQueryAsync();
+                    await transaction.CommitAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"[{DateTime.Now}]" + ex.Message);
+
+                    try
+                    {
+                        await transaction.RollbackAsync();
+                    }
+                    catch (Exception ex2)
+                    {
+                        _logger.LogError($"[{DateTime.Now}]" + ex2.Message);
+                    }
+
+                    throw new API_Exception(HttpStatusCode.InternalServerError, "Internal server error");
+                }
+            }
+        }
     }
 }

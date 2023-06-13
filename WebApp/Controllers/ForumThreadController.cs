@@ -54,5 +54,16 @@ namespace WebApp.Controllers
             var forumThreads = await facade.GetAll();
             return forumThreads.ToArray();
         }
+
+        [HttpDelete("{id}")]
+        [Authorize]
+        public async Task<IActionResult> Delete(long id)
+        {
+            var user = Token.GetCurrentUser(HttpContext);
+            var facade = new ForumThreadFacade(_logger);
+            await facade.Delete(user, id);
+
+            return Ok();
+        }
     }
 }
