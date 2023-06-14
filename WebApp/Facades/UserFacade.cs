@@ -44,9 +44,10 @@ namespace WebApp.Facades
                 || !password.Any(char.IsLetter)
                 || !password.Any(char.IsLower)
                 || !password.Any(char.IsUpper)
+                || !(password.Any(char.IsSymbol) || (password.Any(char.IsPunctuation)))
                 )
             {
-                throw new API_Exception(HttpStatusCode.BadRequest, "Password must contain at least one letter, one lower/upper case letter, and a number.");
+                throw new API_Exception(HttpStatusCode.BadRequest, "Password must contain at mix of upper/lower case letters, numbers and symbols.");
             }
 
             User? found = await Get(dto.Username);

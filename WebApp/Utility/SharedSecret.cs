@@ -8,7 +8,7 @@ using System.Threading;
 public class SharedSecret : BackgroundService
 {
     private static byte[] secret;
-    private static TimeSpan PERIODIC_TIMER = TimeSpan.FromSeconds(60 * 5); // 5 minutes
+    private static TimeSpan PERIODIC_TIMER = TimeSpan.FromHours(24); // 24 hours
     private static PeriodicTimer timer = new PeriodicTimer(PERIODIC_TIMER);
 
     public static byte[] GetSharedKey()
